@@ -119,7 +119,7 @@ function _draw()
 
 	draw_crumbs()
 
-	sspr_obj(3,enem.x,enem.y)
+	sspr_obj(1,enem.x,enem.y)
 	local x,y=enem.x,enem.y
 	local tx,ty=sin(enem.dir),cos(enem.dir)
 	local dist=10

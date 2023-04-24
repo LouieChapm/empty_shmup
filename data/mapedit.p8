@@ -22,8 +22,6 @@ function _init()
 	init_sprfuncs(spr_library,anim_library)
 	init_mapfuncs(enemy_spawns,crumb_lib,shot_lib)
 
-	debug=#shot_lib[4]
-
 	menuitem(1, "export data", function() export_data() end)
 
 	default_new=split"60,1,2,63,63,"
@@ -84,7 +82,7 @@ function _draw()
 
 	for e in all(enems) do
 		local _x,_y=e.sx+e.ox,e.sy+e.oy
-		sspr_obj(32,_x,_y)
+		sspr_obj(1,_x,_y) -- eventually replace this with "ship data"
 		
 		local shotlen=#shot_lib[e.path_index]
 		print(shotlen,_x+10,_y+10,5)
@@ -271,6 +269,8 @@ function drw_sidebar()
 	local arrow_y=62
 	local toselect=nil -- controls selecting highlighted jobbies
 	for spawn in all(enemy_spawns) do
+		if(#spawn<=1)goto skip -- if the list is empty then just relax man , skip through it
+
 		local time,unit,xpos,ypos=unpack(spawn)
 		local y=map_timeline-time+61
 
@@ -281,6 +281,7 @@ function drw_sidebar()
 		end
 		print("◆",3,y,7)
 	end
+	::skip::
 	selected=toselect
 	
 	rectfill(arrow_x,arrow_y-2,arrow_x+10,arrow_y+6,0)
