@@ -1,20 +1,24 @@
-speeda,speedb=1.7,0.8
-bnk,bnkspd=0,0.3
+speeda=1.4
+bnk,bnkspd=0,.25
 
 -- player shot speed / shot rate / shot limit
-psp,pr8,plm=5,3,30
+psp,pr8,plm=5,3,15
 pmuz=0 -- muzzle flash
-psoff=split"-4,-2,4,-2"
+psoff=split"-3,-12,-3,-12,4,-12,4,-12"
+psdir=split"0.48,0.5,0.5,0.52"
 
 puls={}
 plast=0
 
+hitregs={}
 
-function init_baseshmup()
-	debug=""
-	t=0
 
-	hitboxes=parse_data("0,0,2,2|-3,-8,8,8|-7,-7,15,15")
+function init_baseshmup(_enemy_data)
+	hitboxes=parse_data("0,0,2,2|-2,0,5,8|-9,-7,20,15|-3,-4,8,8")
+
+	enemy_data=parse_data(_enemy_data)
+	
+	player={x=63,y=63,hb=gen_hitbox(1),}
 end
 
 enems={} -- enemies
@@ -28,10 +32,6 @@ function player_movement()
 	local ud=tonum(btn"3")-tonum(btn"2")
 	inbtn=btn()
 
-	-- define stance a or stance b
-	target_stance=tonum(btn"4")
-	local mspeed=target_stance==1 and speedb or speeda	
-
 	-- anti-cobblestone
 	if inbtn&15!=last_btn then
 		player_x,player_y=player_x\1,player_y\1
@@ -40,8 +40,8 @@ function player_movement()
 
 	--normalized movement
 	local nrm=lr!=0 and ud!=0 and 0.717 or 1
-	player_x+=lr*nrm*mspeed
-	player_y+=ud*nrm*mspeed
+	player_x+=lr*nrm*speeda
+	player_y+=ud*nrm*speeda
 	player_x=mid(2,player_x,124)
 	player_y=mid(2,player_y,124)
 
@@ -49,7 +49,7 @@ function player_movement()
 	player.x,player.y=player_x,player_y
 
 	-- delayed x/y
-	delx,dely=lerp(delx,player_x,0.2),lerp(dely,player_y,0.2)
+	delx,dely=lerp(delx,player_x,0.2),lerp(dely,player_y,0.2) -- tokens
 
 	-- banking
 	bnk=mid(-2,mid(bnk-bnkspd,0.5,bnk+bnkspd)+lr*bnkspd*2.5,2.95)
@@ -61,25 +61,41 @@ function player_shoot()
 	if(not btn"4" and not btn"5")return
 
 	pmuz=4
+	bnk_offset=tonum(bnk<-1)*-1+tonum(bnk>1)
+
+	local index=1
 	for i=1,#psoff,2 do
-		add(puls,{x=player_x+psoff[i],y=player_y+psoff[i+1],aox=t,type=8,hb=gen_hitbox(2)})
+		local newpul={x=player_x+psoff[i]+bnk_offset,y=player_y+psoff[i+1],aox=t,type=2,hb=gen_hitbox(2),dir=psdir[index]}
+		if i==1 then
+			if(bnk_offset<0)newpul.x-=bnk_offset*4
+		else
+			if(bnk_offset>0)newpul.x-=bnk_offset*4
+		end
+
+		index+=1
+		add(puls,newpul)
 	end
 
 	plast=pr8 -- set last shot to shot rate
 end
 
+
+
 function muzzle_flash()
 	if pmuz>0 then
-		pmuz-=1
+		pmuz-=0.5 -- "decount" muzzle flash animation
 		for i=-4,4,8 do
-			sspr_obj(split"22,23,24,25"[4-pmuz\1],player_x-i,player_y)
+			local _x=player_x-i
+			if(bnk_offset>0 and i<0)_x-=3		-- change muzzle positions if the player is shooting
+			if(bnk_offset<0 and i>0)_x+=3		-- seperate check for each muzzle , bad but this is staying
+			sspr_obj(split"15,16,15,14,13"[4-pmuz\1],_x,player_y-5)
 		end
 	end
 end
 
 -- draws a single bullet
 -- designed to be used with foreach
-function drw_puls(bul)
+function drw_pul(bul)
 	sspr_anim(bul.type,bul.x,bul.y,bul.aox,8)
 end
 
@@ -100,13 +116,26 @@ function upd_pul(pul)
 		delete_item=true
 	end
 
-	if(enem_col(pul))delete_item=true
+	local hit=enem_col(pul)
+	if(hit)spawn_hitreg(pul.x,pul.y) hit.health-=1 hit.flash,delete_item=4,true -- spawn_hitreg is a weird one
+	-- enemy.health-=1 enemy.flash=2 
 
 	if delete_item then
-		if(pul.opt)pul.opt.shot_count-=1
 		del(puls,pul)
-		del(opuls,pul)
 	end
+end
+
+function spawn_hitreg(_x,_y)
+	add(hitregs,{x=_x+eqrnd(3),y=_y+5+eqrnd(3),o=t%4,life=8})
+
+	-- NOTE "life" needs to be #frames*frame_rate
+	-- here there are 4 frames , and it's at speed 2
+end
+
+function drw_hitreg(_hr)
+	_hr.life-=1
+	sspr_anim(7,_hr.x,_hr.y,_hr.o,2)
+	if(_hr.life<0)del(hitregs,_hr)
 end
 
 
@@ -114,10 +143,31 @@ end
 -- returns object if there is one
 function enem_col(item)
 	for enemy in all(enems) do
+		if(not enemy.active)goto continue
 		local hit=col(item,enemy)
-		if(hit)enemy.health-=1 enemy.flash=2 return enemy
+		if(hit)return enemy
+
+		::continue::
 	end
 	return false
+end
+
+-- draw a single enemy
+function drw_enem(e)
+	if(e.below!=enem_draw_under)return
+
+	if(e.flash>0)allpal(3)
+	local _x,_y=e.sx+e.ox,e.sy+e.oy
+	sspr_anim(e.s,_x,_y) -- eventually replace this with "ship data"
+	if(e.flash>0)allpal()e.flash-=1
+end
+
+-- replaces every colour with a colour
+-- used for sprite flash
+function allpal(_c)
+	for i=0,15 do
+		pal(i, _c or i)
+	end
 end
 
 
@@ -125,13 +175,13 @@ end
 function col(a,b)
 	local ahb,bhb=a.hb,b.hb
 	
-	local ax=a.x+ahb[1]
-	local ay=a.y+ahb[2]
-	local axw,ayh=ax+ahb[3]-1,ay+ahb[4]-1
+	local ax=a.x+ahb.ox
+	local ay=a.y+ahb.oy
+	local axw,ayh=ax+ahb.w-1,ay+ahb.h-1
 
-	local bx=b.x+ahb[1]
-	local by=b.y+ahb[2]
-	local bxw,byh=bx+ahb[3]-1,by+ahb[4]-1
+	local bx=b.x+bhb.ox
+	local by=b.y+bhb.oy
+	local bxw,byh=bx+bhb.w-1,by+bhb.h-1
 
 	if(ay > byh)return false
 	if(by > ayh)return false
@@ -148,6 +198,10 @@ function gen_hitbox(_index)
 	return hb
 end
 
+-- returns a random float between -num and +num
+function eqrnd(_num)
+	return rnd(_num*2)-_num
+end
 
 -- required for basically everything
 function parse_data(_data)
@@ -175,8 +229,14 @@ end
 
 -- enemy functions
 function spawn_enem(_path, _type, _x, _y)
+	local anim,below,health,hb,death_mode,suicide_shot=unpack(enemy_data[_type])
+
 	local enemy={
-		s=_type, -- sprite
+		active=true, 			-- when disabled the enemy can't be shot
+		deathmode=death_mode, 	-- controls effects on death
+		below=below==1,			-- whether the enemy is below the player
+
+		s=anim, -- sprite
 
 		sx=_x,	-- spawn x/y
 		sy=_y,
@@ -192,9 +252,9 @@ function spawn_enem(_path, _type, _x, _y)
 
 		perc=0,
 
-		hb=gen_hitbox(3),
+		hb=gen_hitbox(hb),
 
-		health=3,
+		health=health,
 		flash=0,
 
 		path_index=_path, -- path index
@@ -270,5 +330,13 @@ function follow_path(_e)
 	-- health stuff
 	-- kill enemy on zero health
 	-- todo completely move this to it's own "damage_enemies()" function
-	if(_e.health<=0)del(enems,_e)
+	if _e.health<=0 then
+		local deathmode=_e.deathmode
+		if deathmode==1 then
+			_e.s=6
+			_e.active=false
+		else
+			del(enems,_e)
+		end
+	end
 end
