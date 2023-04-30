@@ -1,1 +1,1 @@
-bul_library=[[sprite,1,1,4,0|||]]
+bul_library=[[sprite,1,2,4,0|fspawn,0,60,3|sprite,2,1,4,0|]]

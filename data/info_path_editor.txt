@@ -1,1 +1,3 @@
-editor_path_library=[[|15,63,-16|init,1,5]]
+editor_path_library=[[60,1,1,-1|15,63,-16|init,1,5,wait,60,1,tdir,0.5,1
+60,1,1,0.5|10,63,-16|init,1,5,wait,60,1,tdir,0.5,1
+|15,63,-16|]]

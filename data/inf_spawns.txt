@@ -1,1 +1,1 @@
-enemy_spawns=[[]]
+enemy_spawns=[[60,1,2,80,-10]]

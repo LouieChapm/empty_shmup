@@ -294,7 +294,7 @@ function update_input()
 					return
 				elseif nav.hori>3 and nav.vert==#cur_data[1]+1 then
 					-- frame , rank , type , direction
-					add(cur_data[1],{60,1,5,-1})
+					add(cur_data[1],{60,1,1,-1})
 					return
 				end
 

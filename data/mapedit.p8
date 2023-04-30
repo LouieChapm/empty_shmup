@@ -329,7 +329,7 @@ function export_data()
     out=sub(out,1,-2) -- remove last char bc do it do it yeah ! you dont want it mate
 	out..="]]"
 
-    printh(out, "data/inf_spawns.txt", true)
+    printh(out, "inf_spawns.txt", true)
 end
 
 function copy(_table)
@@ -360,6 +360,8 @@ function rrectfill(_x,_y,_w,_h,_c)
 end
 
 function sort_table()
+	if(#enemy_spawns<=1)return
+
 	local out={}
 	local copy_tab=copy(enemy_spawns)
 

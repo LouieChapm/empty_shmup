@@ -31,12 +31,12 @@ function iterate_filters(bul)
    if ftype=="fspeed" then
    	bul.spd = bul.spd<0.1 and 0 or bul.spd*filter.rate
    elseif ftype=="ftarget" then
-    bul.dir=get_player_dir(bul.x,bul.y)
+    bul.dir=filter.direction==-1 and get_player_dir(bul.x,bul.y) or filter.direction
     bul.spd=filter.speed
     if(bul.circ_data)bul.circ_data.rate=0
     del(bul.filters,filter)
    elseif ftype=="fspawn" then
-    create_spawner(filter.spawn, nil, bul.dir)
+    create_spawner(filter.spawn, {x=bul.x,y=bul.y}, bul.dir)
     del(bul.filters,filter)
     del(buls,bul)
    end
