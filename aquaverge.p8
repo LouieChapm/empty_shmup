@@ -52,10 +52,7 @@ function _draw()
 	foreach(puls,drw_pul)						-- player projectiles
 	muzzle_flash()								-- muzzle flash (unsurprisingly)
 
-	fillp(▒)
-	circfill(delx+4,dely+6,7,5)
 	sspr_obj(flr(bnk+3),player_x,player_y)		-- player sprite
-	fillp()
 
 	enem_draw_under=false						
 	foreach(enems,drw_enem)
@@ -76,7 +73,6 @@ function _draw()
 	-- debug_hitboxes()
 	drw_debug()
 end
-
 
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006611116600000000

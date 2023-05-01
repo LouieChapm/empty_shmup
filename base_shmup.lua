@@ -5,6 +5,7 @@ bnk,bnkspd=0,.25
 psp,pr8,plm=5,3,15
 pmuz=0 -- muzzle flash
 psoff=split"-3,-12,-3,-15,4,-15,4,-12"
+
 psdir=split"0.48,0.5,0.5,0.52"
 
 puls={}
@@ -65,7 +66,7 @@ function player_shoot()
 
 	local index=1
 	for i=1,#psoff,2 do
-		local newpul={x=player_x+psoff[i]+bnk_offset,y=player_y+psoff[i+1],aox=t,type=2,hb=gen_hitbox(2),dir=psdir[index]}
+		local newpul={x=player_x+psoff[i]+bnk_offset,y=player_y+psoff[i+1],aox=t,type=2,hb=gen_hitbox(2),dir=psdir[index]+flr(bnk)*0.02}
 		if i==1 then
 			if(bnk_offset<0)newpul.x-=bnk_offset*4
 		else
