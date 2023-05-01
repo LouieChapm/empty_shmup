@@ -4,7 +4,7 @@ bnk,bnkspd=0,.25
 -- player shot speed / shot rate / shot limit
 psp,pr8,plm=5,3,15
 pmuz=0 -- muzzle flash
-psoff=split"-3,-12,-3,-12,4,-12,4,-12"
+psoff=split"-3,-12,-3,-15,4,-15,4,-12"
 psdir=split"0.48,0.5,0.5,0.52"
 
 puls={}
@@ -77,6 +77,7 @@ function player_shoot()
 	end
 
 	plast=pr8 -- set last shot to shot rate
+	sfx(62)
 end
 
 
@@ -117,8 +118,24 @@ function upd_pul(pul)
 	end
 
 	local hit=enem_col(pul)
-	if(hit)spawn_hitreg(pul.x,pul.y) hit.health-=1 hit.flash,delete_item=4,true -- spawn_hitreg is a weird one
-	-- enemy.health-=1 enemy.flash=2 
+	if hit then
+		sfx(63) 
+		spawn_hitreg(pul.x,pul.y) 
+		hit.health-=1 
+		hit.flash,delete_item=4,true -- spawn_hitreg is a weird one
+
+		if hit.health<=0 and hit.sui_shot>0 then
+			local sui=hit.sui_shot
+			create_spawner(sui\1,hit,sui%1==0 and -1 or sui%1)
+			
+			--[[
+				putting decimals in the suicide shot thing can allow for prefined angles
+				4 		= pattern 4 and targeted
+				4.75 	= pattern 4 and shooting down
+				2.999 	= pattern 2 and shooting as close to the right as is possible
+			]]--
+		end
+	end
 
 	if delete_item then
 		del(puls,pul)
@@ -126,7 +143,7 @@ function upd_pul(pul)
 end
 
 function spawn_hitreg(_x,_y)
-	add(hitregs,{x=_x+eqrnd(3),y=_y+5+eqrnd(3),o=t%4,life=8})
+	add(hitregs,{x=_x+eqrnd(3),y=_y+5+eqrnd(3),o=t%4+rnd(2)\1,life=12})
 
 	-- NOTE "life" needs to be #frames*frame_rate
 	-- here there are 4 frames , and it's at speed 2
@@ -134,7 +151,7 @@ end
 
 function drw_hitreg(_hr)
 	_hr.life-=1
-	sspr_anim(7,_hr.x,_hr.y,_hr.o,2)
+	sspr_anim(7,_hr.x,_hr.y,_hr.o,3)
 	if(_hr.life<0)del(hitregs,_hr)
 end
 
@@ -153,13 +170,23 @@ function enem_col(item)
 end
 
 -- draw a single enemy
+
+rotor_pos=split"-13,-4,13,-4"
 function drw_enem(e)
 	if(e.below!=enem_draw_under)return
 
-	if(e.flash>0)allpal(3)
+	if(e.flash>0)allpal(7)
 	local _x,_y=e.sx+e.ox,e.sy+e.oy
 	sspr_anim(e.s,_x,_y) -- eventually replace this with "ship data"
 	if(e.flash>0)allpal()e.flash-=1
+
+	--[[
+	if e.s==4 then
+		for i=1,#rotor_pos,2 do
+			sspr_anim(8,_x+rotor_pos[i],_y+rotor_pos[i+1],0,2)
+		end
+	end
+	]]--
 end
 
 -- replaces every colour with a colour
@@ -235,6 +262,7 @@ function spawn_enem(_path, _type, _x, _y)
 		active=true, 			-- when disabled the enemy can't be shot
 		deathmode=death_mode, 	-- controls effects on death
 		below=below==1,			-- whether the enemy is below the player
+		sui_shot=suicide_shot,
 
 		s=anim, -- sprite
 

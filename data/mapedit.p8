@@ -11,6 +11,7 @@ __lua__
 #include inf_patterns.txt
 #include inf_sprites.txt
 #include inf_spawns.txt
+#include inf_enems.txt
 
 sidebar_scale=0.1
 max_seconds=60
@@ -21,10 +22,13 @@ ln_col=0
 function _init()
 	t=0
 
-	init_baseshmup()
+	init_baseshmup(enemy_data)
 	init_bulfuncs(bul_library)
 	init_sprfuncs(spr_library,anim_library)
 	init_mapfuncs(enemy_spawns,crumb_lib,shot_lib)
+
+	enem_draw_under=false
+	palt(0,false)
 
 	menuitem(1, "export data", function() export_data() end)
 
@@ -84,13 +88,10 @@ function _draw()
 
 	if(selected)draw_preview_crumbs(selected[2],selected[4],selected[5])
 
-	for e in all(enems) do
-		local _x,_y=e.sx+e.ox,e.sy+e.oy
-		sspr_obj(1,_x,_y) -- eventually replace this with "ship data"
-		
-		local shotlen=#shot_lib[e.path_index]
-		print(shotlen,_x+10,_y+10,5)
-	end
+	enem_draw_under=false
+	foreach(enems,drw_enem)
+	enem_draw_under=true
+	foreach(enems,drw_enem)
 
 	-- draw player
 	local x,y=player.x,player.y
