@@ -21,9 +21,14 @@ numbers=split("0,1,2,3,4,5,6,7,8,9,-,.",",",false)
 #include inf_sprites.txt
 #include inf_patterns.txt
 #include inf_crumbs.txt
+#include inf_enems.txt
 
 #include ../src/bulfuncs.lua
 #include ../src/sprfuncs.lua
+
+#include ../base_shmup.lua
+#include ../debugfuncs.lua
+
 
 function my_menu_item(b)
     if(b&1 > 0) game_rank=mid(1,game_rank-1,3) 
@@ -46,6 +51,7 @@ function _init()
 	menuitem(1, "export data", function() export_data() end)
 	menuitem(2, "⬅️ rank:2 ➡️", my_menu_item)
 
+	init_baseshmup(enemy_data)
 	init_sprfuncs(spr_library, anim_library)
 	init_bulfuncs(bul_library)
 
@@ -79,9 +85,7 @@ function _init()
 	if(crumbs_list[nav.lib_index<3])new_crumbs()
 
 	
-	
-	pal({[0]=140,1,2,3,4,5,6,7,8,9,10,138,12,13,139,136},1)
-	palt(0,false)pal({[0]=128,133,141,7,129,1,140,12,134,6,136,8,3,139,11,10},1)
+	palt(0,false)
 	
 	init_player()
 

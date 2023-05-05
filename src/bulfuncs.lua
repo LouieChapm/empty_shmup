@@ -9,11 +9,13 @@ __lua__
 function init_bulfuncs(_bul_library)
 	bul_library=parse_data(_bul_library)
 	spawners,buls={},{}
+
+	bul_hitboxes=parse_data("-1,-1,4,4|-3,-3,6,6")
 end
 
 function upd_bulfuncs()
- foreach(spawners,upd_spawner)
- foreach(buls,upd_bul)
+	foreach(spawners,upd_spawner)
+	foreach(buls,upd_bul)
 end
 
 function drw_bulfuncs()
@@ -24,25 +26,25 @@ end
 
 -- filters
 function iterate_filters(bul)
- for filter in all(bul.filters) do
-  local fstart,fend=filter.f_start,filter.f_end
-  if bul.life>fstart then
-   local ftype=filter.type
-   if ftype=="fspeed" then
-   	bul.spd = bul.spd<0.1 and 0 or bul.spd*filter.rate
-   elseif ftype=="ftarget" then
-    bul.dir=filter.direction==-1 and get_player_dir(bul.x,bul.y) or filter.direction
-    bul.spd=filter.speed
-    if(bul.circ_data)bul.circ_data.rate=0
-    del(bul.filters,filter)
-   elseif ftype=="fspawn" then
-    create_spawner(filter.spawn, {x=bul.x,y=bul.y}, bul.dir)
-    del(bul.filters,filter)
-    del(buls,bul)
-   end
-  end
-  if(fend!=-1 and bul.life>fend)del(bul.filters,filter)
- end
+ 	for filter in all(bul.filters) do
+		local fstart,fend=filter.f_start,filter.f_end
+		if bul.life>fstart then
+			local ftype=filter.type
+			if ftype=="fspeed" then
+					bul.spd = bul.spd<0.1 and 0 or bul.spd*filter.rate
+			elseif ftype=="ftarget" then
+					bul.dir=filter.direction==-1 and get_player_dir(bul.x,bul.y) or filter.direction
+					bul.spd=filter.speed
+					if(bul.circ_data)bul.circ_data.rate=0
+					del(bul.filters,filter)
+			elseif ftype=="fspawn" then
+					create_spawner(filter.spawn, {x=bul.x,y=bul.y}, bul.dir)
+					del(bul.filters,filter)
+					del(buls,bul)
+			end
+		end
+		if(fend!=-1 and bul.life>fend)del(bul.filters,filter)
+ 	end
 end
 
 function do_filter(bul, ref)
@@ -100,29 +102,39 @@ function upd_bul(bul)
     -- if(col(player,bul))sfx(62)
 end
 
+
 -->8
 -- tool
 function spawn_bul(_x,_y,_type,_dir,_speed,_ani_speed)
+	local hb_index=1 -- give bullet default hurtbox
+
+	--[[
+
+		ADD INFORMATION HERE TO CHANGE HITBOX SIZE :))
+
+	]]
 
     -- creates bullet at location , of type , with direction / speed , and set animation speed
 	local bul={
 
 		x=_x,
-  wx=_x,
-  ox=0,
+		wx=_x,
+		ox=0,
         
 		y=_y,
-  wy=_y, -- wy/oy is used for circles and such
-  oy=0,
+		wy=_y, -- wy/oy is used for circles and such
+		oy=0,
+
+		hb=gen_hitbox(hb_index, bul_hitboxes),
 
 		anim=_type, -- animation reference || CANNOT be used with single sprites as of now
-  anim_speed=_ani_speed,
+		anim_speed=_ani_speed,
 
-  dir=_dir==-1 and get_player_dir(_x,_y) or _dir, -- if the bul is spawned and still has a direction of -1 , then it is set to the player direction
-  spd=_speed,
+		dir=_dir==-1 and get_player_dir(_x,_y) or _dir, -- if the bul is spawned and still has a direction of -1 , then it is set to the player direction
+		spd=_speed,
 
-  spawn=t, -- frame it was spawned on
-  life=0,  -- frames that it has been spawned for  -- probably could be condensed , but I can't be bothered
+		spawn=t, -- frame it was spawned on
+		life=0,  -- frames that it has been spawned for  -- probably could be condensed , but I can't be bothered
   
   filters={},
 	}

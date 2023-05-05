@@ -31,9 +31,14 @@ helpers={split"none",split"spd mult,anim index,anim spd,filter ref",split"refere
 
 #include inf_patterns.txt
 #include inf_sprites.txt
+#include inf_enems.txt
 
 #include ../src/bulfuncs.lua
 #include ../src/sprfuncs.lua
+
+#include ../base_shmup.lua
+#include ../debugfuncs.lua
+
 
 function _init()
 	t=0
@@ -45,6 +50,7 @@ function _init()
     menuitem(3, "add 5 empty pats", function() add_new_commands(5) end)
 
 
+	init_baseshmup(enemy_data)	-- literally just for the palette
     init_bulfuncs(bul_library) -- bulfuncs.lua
 	init_sprfuncs(spr_library, anim_library) -- sprfuncs.lua
 
@@ -70,7 +76,6 @@ function _init()
 
 	poke(0x5f2d, 1) -- keyboard access
 	
-	pal({[0]=128,133,141,7,129,1,140,12,134,6,136,8,3,139,11,10},1)
 	palt(0,false)
 	
 
