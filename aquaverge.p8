@@ -32,6 +32,7 @@ function _init()
 
 	player_lerp_delay=0
 
+	gen_moon()
 
 	palt(0,false)
 end
@@ -141,13 +142,13 @@ function gen_moon()
 		end
 	end
 
-	for	py=0,128 do
-		for	px=0,128 do
+	for py=0,128 do
+		for px=0,128 do
 			local dither,x,y=(px+py)%2==0,px/128,py/128
 			local rx,ry=(x-.5)*2,(y-.5)*2
 			local outer_d=sqrt(rx*rx+ry*ry)
 			
-			if outer_d<1.0	then
+			if outer_d<1.0 then
 			local ix=(x-0.6)+sin(x*10+y*10)/80+sin(x*.5+.4+y*.8)/30
 			local iy=(y-0.40)+sin(x*7+y*14)/80+sin(x*.5+.4+y*.8)/30
 			local inner_d=sqrt(ix*ix+iy*iy-ix/9)+rnd(.04)
@@ -181,7 +182,7 @@ function gen_moon()
 	--	save data
 	memcpy(0x8000,0x0,0x2000)
 	--	restore	spritesheet
-	memcpy(0x0,0xa000,0x2000)
+	memcpy(0x0,0xc000,0x2000)
 end
 
 function drw_moon(x,y)
