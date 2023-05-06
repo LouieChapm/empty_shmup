@@ -1,4 +1,4 @@
-speeda,speedb=1.7,0.8
+speeda,speedb=1.8,0.8
 bnk,bnkspd=0,0.3
 
 -- player shot speed / shot rate / shot limit
@@ -24,7 +24,7 @@ enems={} -- enemies
 function init_baseshmup(_enemy_data)
 	hitboxes=parse_data("0,0,2,2|-1,-8,4,8|-9,-7,20,15|-3,-4,8,8|-4,-5,9,13|-5,-5,11,13")
 
-	enemy_data=parse_data(_enemy_data)
+	enemy_data=parse_data(_enemy_data,"\n")
 
 	enem_draw_above=false
 	opt_draw_above=false
@@ -35,7 +35,7 @@ function init_baseshmup(_enemy_data)
 	disable_input=0		-- frames to take movement control from player
 	player_immune=0		-- frames that the player is immune for
 
-	pal({[0]=2,4,9,10,5,13,6,7,136,8,3,139,138,130,0,0},1)
+	pal({[0]=2,4,9,10,5,13,6,7,136,8,3,139,138,130,133,0},1)
 end
 
 
@@ -114,7 +114,7 @@ function player_movement()
 		local nrm=lr!=0 and ud!=0 and 0.717 or 1
 		player_x+=lr*nrm*mspeed
 		player_y+=ud*nrm*mspeed
-		player_x=mid(2,player_x,124)
+		player_x=mid(2+left_bound,player_x,124+right_bound)
 		player_y=mid(2,player_y,124)
 
 		-- add data back to table for niceties
@@ -199,7 +199,7 @@ function upd_pul(pul)
 		spawn_hitreg(pul.x,pul.y) 
 		
 		
-		if(hit.y>10 or hit.t>30)hit.health-=1 		-- hit them only if they've been alive for 1 second , OR if they're out the top of the screen
+		if(hit.y>5 and hit.t>15)hit.health-=1 		-- hit them only if they've been alive for 1 second , OR if they're out the top of the screen
 		
 		hit.flash,delete_item=4,true -- spawn_hitreg is a weird one
 
@@ -331,9 +331,9 @@ function eqrnd(_num)
 end
 
 -- required for basically everything
-function parse_data(_data)
-    local out={}
-    for step in all(split(_data,"|")) do
+function parse_data(_data, _delimeter)
+    local out,delimeter={},_delimeter or "|"
+    for step in all(split(_data,delimeter)) do
         add(out,split(step))
     end
     return out
@@ -362,12 +362,13 @@ end
 
 -- enemy functions
 function spawn_enem(_path, _type, _x, _y)
-	local anim,health,hb,death_mode,suicide_shot=unpack(enemy_data[_type])
+	local anim,health,hb,death_mode,suicide_shot,value=unpack(enemy_data[_type])
 
 	local enemy={
 		active=true, 			-- when disabled the enemy can't be shot
 		deathmode=death_mode, 	-- controls effects on death
 		sui_shot=suicide_shot,
+		value=value,
 
 		s=anim, -- sprite
 
@@ -440,6 +441,7 @@ function upd_enem(_e)
 		end
 
 		del(enems,_e)
+		give_points(_e.value)
 		
 		return
 	end
