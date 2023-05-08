@@ -14,7 +14,7 @@ plast=0
 
 options={} -- todo : rework
 opuls={} -- option buls
-olm=4 -- options shot limit
+olm=3 -- options shot limit
 
 hitregs={}
 
@@ -22,7 +22,7 @@ enems={} -- enemies
 
 
 function init_baseshmup(_enemy_data)
-	hitboxes=parse_data("0,0,2,2|-1,-8,4,8|-9,-7,20,15|-3,-4,8,8|-4,-5,9,13|-5,-5,11,13")
+	hitboxes=parse_data("0,0,2,2|-3,-8,8,8|-9,-7,20,8|-3,-4,8,8|-4,-5,9,13|-5,-5,11,13|-13,-8,27,16|-15,-15,31,30|-9,-15,18,15")
 
 	enemy_data=parse_data(_enemy_data,"\n")
 
@@ -34,6 +34,10 @@ function init_baseshmup(_enemy_data)
 
 	disable_input=0		-- frames to take movement control from player
 	player_immune=0		-- frames that the player is immune for
+
+	combo_num,combo_counter=0,0
+
+	pickups={}
 
 	pal({[0]=2,4,9,10,5,13,6,7,136,8,3,139,138,130,133,0},1)
 end
@@ -114,7 +118,7 @@ function player_movement()
 		local nrm=lr!=0 and ud!=0 and 0.717 or 1
 		player_x+=lr*nrm*mspeed
 		player_y+=ud*nrm*mspeed
-		player_x=mid(2+left_bound,player_x,124+right_bound)
+		player_x=mid(2-player_bounds,player_x,124+player_bounds)
 		player_y=mid(2,player_y,124)
 
 		-- add data back to table for niceties
@@ -126,6 +130,10 @@ function player_movement()
 
 	-- delayed x/y
 	delx,dely=lerp(delx,player_x,0.2),lerp(dely,player_y,0.2) -- tokens
+
+	for enem in all(enems) do
+		if(player_col(enem))player_hurt()
+	end
 end
 
 function player_shoot()
@@ -196,12 +204,14 @@ function upd_pul(pul)
 	local hit=enem_col(pul)
 	if hit then
 		sfx(63) 
-		spawn_hitreg(pul.x,pul.y) 
+		spawn_oneshot(8,3,pul.x+eqrnd(3),pul.y-rnd(3)-3) 	
 		
+		add_ccounter(20,2)
 		
-		if(hit.y>5 and hit.t>15)hit.health-=1 		-- hit them only if they've been alive for 1 second , OR if they're out the top of the screen
+		-- only put up the combo if you're dealing damage
+		if(hit.shot_index>1 or hit.t>60)combo_num+=.1  hit.health-=1 		-- hit them only if they've been alive for 1 second , OR if they're out the top of the screen
 		
-		hit.flash,delete_item=4,true -- spawn_hitreg is a weird one
+		hit.flash,delete_item=hit.flash<-1 and 4 or hit.flash,true
 
 		if hit.health<=0 and hit.sui_shot>0 then
 			local sui=hit.sui_shot
@@ -224,17 +234,26 @@ function upd_pul(pul)
 	end
 end
 
--- little hit registration sprite thing
-function spawn_hitreg(_x,_y)
-	add(hitregs,{x=_x+eqrnd(3),y=_y+5+eqrnd(3),o=t%4+rnd(2)\1,life=12})
+-- any one shot animation
+function spawn_oneshot(_index,_speed,_x,_y)
+	local length=#anim_library[_index]
 
+	add(hitregs,{index=_index,
+
+		x=_x,
+		y=_y,
+
+		o=t%length,
+				
+		life=length*_speed,
+		speed=_speed})
 	-- NOTE "life" needs to be #frames*frame_rate
 	-- here there are 4 frames , and it's at speed 2
 end
 
 function drw_hitreg(_hr)
 	_hr.life-=1
-	sspr_anim(8,_hr.x,_hr.y,_hr.o,3)
+	sspr_anim(_hr.index,_hr.x,_hr.y,_hr.o,_hr.speed)
 	if(_hr.life<0)del(hitregs,_hr)
 end
 
@@ -246,46 +265,50 @@ function enem_col(item)
 
 	for enemy in all(enems) do
 		if(not enemy.active)goto continue
-		local hit=col(item,enemy)
-		if(hit)add(hits,enemy)
+		if(col(item,enemy))add(hits,enemy)
 		::continue::
 	end
-	return #hits>0 and rnd(hits) or false
+	return #hits>0 and rnd(hits)
 end
 
 
 function check_bulcol(_bul)
-	if(player_immune>0)return
 	if(player_col(_bul))player_hurt(_bul)
 end
 
 function player_hurt(_source)
+	if(player_immune>0)return
 
 	-- move player to location
-	player_lerp_perc=0
-	delx,dely=player_lerpx_1,player_lerpy_1
+	player_lerp_perc,player_lerpx_1,player_lerpx_2,delx,dely=0,player_x,player_x+sgn(64-player_x)*min(abs(64-player_x),15),player_lerpx_1,player_lerpy_1 -- tokens
 
-	player_lerp_delay=30
+	player_lerp_delay,player_immune=30,180
 	player.x,player.y=player_lerpx_1,player_lerpy_1
 
-	-- make player immune to damage
-	player_immune=180
+	combo_num,combo_counter=0,0
 	
-	-- maybe clear screen of bullets ?
+	-- make the pickups no longer seek 
+	for pickup in all(pickups) do pickup.seek=false end
 end
 
-function player_col(item)
+function player_col(item) -- tokens maybe ?
 	return col(item,player)
 end
 
 -- draw a single enemy
 
 function drw_enem(e)
-	if(e.flash>0)allpal(7)
+	if(e.dead)return
+
+	if(e.flash>0 or e.anchor and e.anchor.flash>0)allpal(7)
+	
 	local _x,_y=e.sx+e.ox,e.sy+e.oy
 	sspr_obj(e.s,_x,_y)
 
-	if(e.flash>0)allpal()e.flash-=1
+	if(e.dir)print(e.dir,_x+10,_y)
+
+	if(e.flash>-1)allpal()e.flash-=1
+	if(e.anchor and e.anchor.flash>0)allpal()
 end
 
 -- replaces every colour with a colour
@@ -353,8 +376,10 @@ function avg(_tab)
 end
 
 -- ENEMY FUNCTIONS --
-function spawn_anchor(_parent, _type, _ox, _oy)
+function spawn_anchor(_parent, _type, _ox, _oy, _is_active, _brain)
 	local unit=spawn_enem(nil,_type,_ox,_oy)
+	unit.active=_is_active or true
+	unit.brain=_brain or nil
 
 	unit.anchor=_parent
 	add(_parent.anchors,unit)
@@ -371,6 +396,7 @@ function spawn_enem(_path, _type, _x, _y)
 		value=value,
 
 		s=anim, -- sprite
+		type=_type,
 
 		sx=_x,	-- spawn x/y
 		sy=_y,
@@ -399,10 +425,13 @@ function spawn_enem(_path, _type, _x, _y)
 		pathx={},
 		pathy={},
 
-		anchors={}
+		anchors={},
+
+		patterns={},
 	}
 	if(_path)enemy.depth,enemy.path=gen_path(crumb_lib[_path])
 	if(_type==5)enemy.active=false spawn_anchor(enemy,3,-3,-2)spawn_anchor(enemy,4,3,-2)
+	if(_type==7)spawn_anchor(enemy,8,0,-1,true,1)
 
 	add(enems,enemy)
 	return enemy
@@ -421,11 +450,21 @@ function gen_path(_p)
 	return depth,path
 end
 
+turret_sprites=split"37,38,39,40,41"
 function upd_anchor(_e)
+	if(_e.anchor.health<=0)ndebug("ahhh"..t)
+
 	_e.ox=_e.anchor.sx+_e.anchor.ox
 	_e.oy=_e.anchor.sy+_e.anchor.oy
 
-	_e.x,_e.y=_e.ox+_e.sx,_e.oy+_e.sy
+	if _e.type==8 then
+		local dir=(get_player_dir(_e.x,_e.y)+.03125)\.0625 -- calculate direction in seg16
+		_e.dir=mid(.625, dir*.0625,.875)
+
+		local visible=(_e.dir\.0625)-9
+		if(visible<0)visible=abs(visible+2)
+		if(_e.y<player_y)_e.s=turret_sprites[mid(1,visible,5)]
+	end
 end
 
 function upd_enem(_e)
@@ -434,31 +473,71 @@ function upd_enem(_e)
 	-- todo completely move this to it's own "damage_enemies()" function
 	if _e.health<=0 then
 		local deathmode=_e.deathmode
+		local parent=_e.anchor
 		if deathmode==1 then
-			local parent=_e.anchor
 			del(parent.anchors,_e)
-			if(#parent.anchors<=0)parent.depth+=10 parent.active=true
+			if(#parent.anchors<=0)parent.active=true
+		elseif deathmode==2 then
+			parent.health-=50
+
+			new_lerpbrain(parent,parent.x-sgn(_e.sx)*10,30, 2, "overshootout")
+			del(parent.anchors,_e)
 		end
 
-		del(enems,_e)
-		give_points(_e.value)
-		
+		spawn_pickup(_e.x,_e.y,coin_amounts[_e.type],1.5)
+
+		give_score(_e.value)
+
+		combo_num+=3
+		combo_counter=120
+
+		delete_enem(_e)
 		return
 	end
 
 	_e.t+=1
 
-	if(_e.anchor)return
+	if(_e.brain)upd_brain(_e,_e.brain)
+	if(_e.path)follow_path(_e)
+
+	_e.x,_e.y=_e.ox+_e.sx,_e.oy+_e.sy
+
 	for anchor in all(_e.anchors) do 	-- add all of these guys to a list , so that you can draw them last
 		add(anchors,anchor)
 	end
 
-	if(_e.path)follow_path(_e)
-
 	-- controls the hit-flash
 	_e.flash-=1 
 	
-	if(_e.path)enem_path_shoot(_e)
+	if(_e.path and player_lerp_delay<=0)enem_path_shoot(_e)
+end
+
+function upd_brain(_e, _index)
+	-- tokens
+	if(_index==1 and (_e.t+50)%90==0 and _e.y>5 and _e.y<80 and _e.y<player_y)add(_e.patterns, create_spawner(11,_e,_e.dir)) -- the bullet shooting for that one specific anchor
+	
+	-- boss_a
+	if _index==2 then
+		_e.oy=sin(_e.t*.003)*5
+
+		if _e.lerpperc<100 then
+			_e.lerpperc=min(_e.lerpperc+_e.lerpspeed,100)
+			local new_t=easeinoutquad(_e.lerpperc*.01)
+			if _e.lerptype == "overshootout" then
+				new_t=easeoutovershoot(_e.lerpperc*.01)
+			end
+			_e.sx,_e.sy=lerp(_e.originx,_e.tx,new_t),lerp(_e.originy,_e.ty,new_t)
+		end
+	end
+end
+
+-- start x/y 
+-- target x/y
+function new_lerpbrain(_e,_tx,_ty, _spd, _type)
+	_e.originx,_e.originy,_e.tx,_e.ty=_e.sx,_e.sy,_tx,_ty
+	_e.lerpspeed,_e.lerpperc=_spd,0
+
+	_e.lerptype=_type or "easeoutin"
 end
 
 function enem_path_shoot(_e)
@@ -468,7 +547,7 @@ function enem_path_shoot(_e)
 			local data=shot_lib[_e.path_index]
 			local t=_e.shot_index*4-3
 
-			create_spawner(data[t+2],_e,data[t+3])
+			add(_e.patterns, create_spawner(data[t+2],_e,data[t+3]))
 			_e.shot_index+=1
 		end
 	end
@@ -493,9 +572,16 @@ function follow_path(_e)
 
 	_e.ox=avg(_e.pathx)
 	_e.oy=avg(_e.pathy)
-	
-	_e.x=_e.sx+_e.ox
-	_e.y=_e.sy+_e.oy
 
-	if(_e.perc>#path-1)del(enems,_e)
+	-- reached the end of its path
+	if _e.perc>#path-1 then
+		delete_enem(_e)
+	end
+end
+
+
+function delete_enem(_e)
+	for anchor in all(_e.anchors) do anchor.dead=true del(enems,anchor) end -- remove all anchors if the object dies
+	for spawn in all(_e.patterns) do del(spawners,spawn) end -- delete spawners if the baddie dies
+	del(enems,_e)
 end

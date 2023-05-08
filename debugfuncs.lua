@@ -15,7 +15,7 @@ function drw_debug()
 		if(debug_time<=0)debug=""
 	end
 
-	print(debug,1,1,7)
+	print(debug,1+cam_x,122,7)
 end
 
 
@@ -49,6 +49,14 @@ function draw_hitbox(_x,_y,hb,_c)
 	rect(x,y,x+hb.w-1,y+hb.h-1,_c)
 end
 
+function start_at(_num)
+	map_timeline=_num
 
+    local current_target=1
+	for spawn in all(enemy_spawns) do
+		if(map_timeline>spawn[1])current_target+=1
+	end
 
-
+	map_spawnstep=current_target
+	map_nextspawn=enemy_spawns[map_spawnstep]
+end

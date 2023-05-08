@@ -91,7 +91,8 @@ function upd_bul(bul)
         bul.circ_data.scale=min(cd.scale+cd.dscale*0.01,1)
 
         local scale=cd.radius*cd.scale
-        bul.ox,bul.oy=sin(cd.pos)*scale,cos(cd.pos)*scale+sin(cd.pos)
+        bul.ox+=sin(cd.pos)*scale
+		bul.oy+=cos(cd.pos)*scale+sin(cd.pos)
     end
 
     bul.x,bul.y=bul.wx+bul.ox,bul.wy+bul.oy
@@ -143,16 +144,18 @@ function spawn_bul(_x,_y,_type,_dir,_speed,_ani_speed)
  return bul
 end
 
-function create_spawner(_index, _origin, _dir, _parent)
+function create_spawner(_index, _origin, _dir, _parent, _ox, _oy)
 	if(bul_library[_index]=="")debug="error: not not real" return
 
 	if(_index<0)_origin={x=_origin.x,y=_origin.y}_index=abs(_index)
 
+	local _ox,_oy=_ox or 0, _oy or 0
+
 	-- create a spawner object with default values
 	-- send new spawner object to spawners "list"
 	local new_spawner = {
-		ox=0,
-		oy=0,
+		ox=_ox,
+		oy=_oy,
 
 		enemy=_origin,
 
@@ -166,12 +169,14 @@ function create_spawner(_index, _origin, _dir, _parent)
 		instructions=bul_library[_index],
 	}
 	
-	if(new_spawner.instructions[1]!="loop" and _dir==-1)new_spawner.dir=get_player_dir(_origin.x,_origin.y)
+	if(new_spawner.instructions[1]!="loop" and _dir==-1)new_spawner.dir=get_player_dir(_origin.x + _ox,_origin.y + _oy)
 
 	-- if there is a parent , then copy over their settings
 	if _parent then
 		new_spawner.spd=_parent.spd
 		new_spawner.dir=_parent.dir
+
+		new_spawner.ox,new_spawner.oy=_parent.ox,_parent.oy
 
 		if(_parent.circ_data)new_spawner.circ_data=_parent.circ_data
 	end
@@ -191,11 +196,11 @@ function upd_spawner(s)
     local sdir,stime=s.dir,s.time
 
     if type=="sprite" then
-    local bul = spawn_bul(s.enemy.x, s.enemy.y, d3, sdir, d2*s.spd, d4)
-    bul.life-=s.parent_origin_time-t
-    if(s.circ_data)bul.circ_data = s.circ_data
-    if(d5!=0)do_filter(bul,d5)
-    del(spawners,s)
+		local bul = spawn_bul(s.enemy.x + s.ox, s.enemy.y + s.oy, d3, sdir, d2*s.spd, d4)
+		bul.life-=s.parent_origin_time-t
+		if(s.circ_data)bul.circ_data = s.circ_data
+		if(d5!=0)do_filter(bul,d5)
+		del(spawners,s)
 
     elseif type=="loop" then
     if (stime)%d3==0 then
@@ -205,13 +210,13 @@ function upd_spawner(s)
     if(stime\d3>=d4)del(spawners,s)
 
     elseif type=="burst" then
-    if(sdir==-1)sdir=get_player_dir(s.enemy.x,s.enemy.y)
-    for i=1,d3 do
-    local shot = create_spawner(d2, s.enemy, sdir, s)
-    shot.dir+=rnd(d4)-d4*0.5
-    shot.spd+=rnd(d5)
-    end
-    del(spawners, s)
+		if(sdir==-1)sdir=get_player_dir(s.enemy.x + s.ox,s.enemy.y, s.oy)
+		for i=1,d3 do
+			local shot = create_spawner(d2, s.enemy, sdir, s)
+			shot.dir+=rnd(d4)-d4*0.5
+			shot.spd+=rnd(d5)
+		end
+		del(spawners, s)
     elseif type=="circ" then
         for i=0,d3-1 do
             local shot = create_spawner(d2, s.enemy, sdir, s)

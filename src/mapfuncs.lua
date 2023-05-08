@@ -40,10 +40,10 @@ function prepare_spawn(_data)
 
 	-- looped spawn
 	if #_data>5 then
-		local limit,rate,offset_x=unpack(split(_data[6],":"))
-		local ox=offset_x or 0
+		local limit,rate,offset_x,offset_y=unpack(split(_data[6],":"))
+		local ox,oy=offset_x or 0,offset_y or 0
 		for i=1,limit do
-			add(map_spawnpreps,{i*rate,map_nextspawn,ox*i})
+			add(map_spawnpreps,{i*rate,map_nextspawn,ox*i,oy*i})
 		end
 	end
 
@@ -53,8 +53,8 @@ end
 function check_spawn(_spawn)
 	if _spawn[1]<=0 then
 		local frame,path,unit,sx,sy=unpack(_spawn[2])
-		local offset_x=_spawn[3] or 0
-		spawn_enem(path,unit,sx + offset_x,sy) -- from base_shmup -- might move :/
+		local offset_x,offset_y=_spawn[3] or 0,_spawn[4] or 0
+		spawn_enem(path,unit,sx + offset_x,sy + offset_y) -- from base_shmup -- might move :/
 		del(map_spawnpreps,_spawn)
 	else
 		_spawn[1]-=1
