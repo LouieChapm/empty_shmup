@@ -20,6 +20,8 @@ max_seconds=60
 bg_col=13
 ln_col=14
 
+shot_pause=0
+
 player_lerp_delay=0
 
 function _init()

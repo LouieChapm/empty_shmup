@@ -45,6 +45,9 @@ function _init()
 	temp=""
 
 
+	shot_pause=0
+
+
     menuitem(1, "export data", function() export_data() end)
     menuitem(2, "kill all buls", function() buls={} end)
     menuitem(3, "add 5 empty pats", function() add_new_commands(5) end)

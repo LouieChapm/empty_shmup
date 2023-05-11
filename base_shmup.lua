@@ -34,6 +34,7 @@ function init_baseshmup(_enemy_data)
 
 	disable_input=0		-- frames to take movement control from player
 	player_immune=0		-- frames that the player is immune for
+	player_flash=0		-- frames for the player to flash
 
 	combo_num,combo_counter=0,0
 
@@ -55,18 +56,18 @@ function upd_options()
 	-- options perc
 	op_perc=lerp(op_perc,target_stance,0.1,0.005)
 
-	local formation_a=split("-14,7|14,7","|")
-	local formation_b=split("-11,-4|11,-4","|")
+	local formation_a=parse_data("-14,7|14,7")
+	local formation_b=parse_data("-11,-4|11,-4")
 
-	local direction_a=split"0.48,0.52"
-	local direction_b=split"0.5,0.5"
+	local direction_a=split".475,.525"
+	local direction_b=split".5,.5"
 
 	local iter=#options
 
 	for i=1,iter do
 		local opt=options[i]
-		local ox1,oy1=unpack(split(formation_a[i]))
-		local ox2,oy2=unpack(split(formation_b[i]))-- rot_opt(opt,(1/iter)*i,17,6,0.01)
+		local ox1,oy1=unpack(formation_a[i])
+		local ox2,oy2=unpack(formation_b[i])-- rot_opt(opt,(1/iter)*i,17,6,0.01)
 		local ox,oy=lerp(ox1,ox2,op_perc,0.01),lerp(oy1,oy2,op_perc,0.1)
 
 		local dir=lerp(direction_a[i],direction_b[i],op_perc,0.01)
@@ -92,6 +93,9 @@ function drw_option(opt)
 end
 
 function player_movement()
+	inbtn=btn()&15
+	if(player_lerp_perc>=0)lerp_player()		-- lerp player only when ya want <3
+
 	player_x,player_y=player.x,player.y
 	delx,dely=delx or player_x, dely or player_y
 
@@ -102,13 +106,13 @@ function player_movement()
 	-- movement input
 	local lr=tonum(btn"1")-tonum(btn"0")
 	local ud=tonum(btn"3")-tonum(btn"2")
-	inbtn=btn()
+	
 
 	-- anti-cobblestone
-	if inbtn&15!=last_btn then
+	if inbtn!=last_btn then
 		player_x,player_y=player_x\1,player_y\1
 	end
-	last_btn=inbtn&15
+	last_btn=inbtn
 
 	if disable_input>0 or player_lerp_perc>=0 then
 		disable_input-=1
@@ -209,7 +213,11 @@ function upd_pul(pul)
 		add_ccounter(20,2)
 		
 		-- only put up the combo if you're dealing damage
-		if(hit.shot_index>1 or hit.t>60)combo_num+=.1  hit.health-=1 		-- hit them only if they've been alive for 1 second , OR if they're out the top of the screen
+		if hit.shot_index>1 or hit.t>60 then
+			combo_num+=.1  
+			-- intropause means you can chain the combo off the boss before it's taking damage
+			if(hit.intropause<=0)hit.health-=1 		-- hit them only if they've been alive for 1 second , OR if they're out the top of the screen
+		end
 		
 		hit.flash,delete_item=hit.flash<-1 and 4 or hit.flash,true
 
@@ -277,21 +285,22 @@ function check_bulcol(_bul)
 end
 
 function player_hurt(_source)
-	if(player_immune>0)return
-
 	-- move player to location
 	player_lerp_perc,player_lerpx_1,player_lerpx_2,delx,dely=0,player_x,player_x+sgn(64-player_x)*min(abs(64-player_x),15),player_lerpx_1,player_lerpy_1 -- tokens
 
-	player_lerp_delay,player_immune=30,180
+	player_lerp_delay,player_immune,player_flash=30,180,180
 	player.x,player.y=player_lerpx_1,player_lerpy_1
 
 	combo_num,combo_counter=0,0
+
+	new_bulcancel(30, 75)
 	
 	-- make the pickups no longer seek 
 	for pickup in all(pickups) do pickup.seek=false end
 end
 
 function player_col(item) -- tokens maybe ?
+	if(player_immune>0)return false
 	return col(item,player)
 end
 
@@ -300,12 +309,10 @@ end
 function drw_enem(e)
 	if(e.dead)return
 
-	if(e.flash>0 or e.anchor and e.anchor.flash>0)allpal(7)
+	if(e.flash>0 or e.anchor and e.anchor.flash>0)allpal(t%2<1 and 9 or 7) -- tokens
 	
 	local _x,_y=e.sx+e.ox,e.sy+e.oy
 	sspr_obj(e.s,_x,_y)
-
-	if(e.dir)print(e.dir,_x+10,_y)
 
 	if(e.flash>-1)allpal()e.flash-=1
 	if(e.anchor and e.anchor.flash>0)allpal()
@@ -376,13 +383,17 @@ function avg(_tab)
 end
 
 -- ENEMY FUNCTIONS --
-function spawn_anchor(_parent, _type, _ox, _oy, _is_active, _brain)
+function spawn_anchor(_parent, _type, _ox, _oy, _is_active, _brain, _turret)
 	local unit=spawn_enem(nil,_type,_ox,_oy)
 	unit.active=_is_active or true
 	unit.brain=_brain or nil
 
+	if(_turret)add_turret(unit,_turret)
+
 	unit.anchor=_parent
 	add(_parent.anchors,unit)
+
+	return unit
 end
 
 -- enemy functions
@@ -427,11 +438,15 @@ function spawn_enem(_path, _type, _x, _y)
 
 		anchors={},
 
-		patterns={},
+		patterns={},		-- all of the enemy spawner things
+		turrets={},
+
+		lerpperc=-1,
+		intropause=0,
 	}
 	if(_path)enemy.depth,enemy.path=gen_path(crumb_lib[_path])
 	if(_type==5)enemy.active=false spawn_anchor(enemy,3,-3,-2)spawn_anchor(enemy,4,3,-2)
-	if(_type==7)spawn_anchor(enemy,8,0,-1,true,1)
+	if(_type==7)spawn_anchor(enemy,8,0,-1,true,1,1)
 
 	add(enems,enemy)
 	return enemy
@@ -452,8 +467,6 @@ end
 
 turret_sprites=split"37,38,39,40,41"
 function upd_anchor(_e)
-	if(_e.anchor.health<=0)ndebug("ahhh"..t)
-
 	_e.ox=_e.anchor.sx+_e.anchor.ox
 	_e.oy=_e.anchor.sy+_e.anchor.oy
 
@@ -480,8 +493,20 @@ function upd_enem(_e)
 		elseif deathmode==2 then
 			parent.health-=50
 
-			new_lerpbrain(parent,parent.x-sgn(_e.sx)*10,30, 2, "overshootout")
+			new_bulcancel(30, 30, true)
+
+			new_lerpbrain(parent,parent.x-sgn(_e.sx)*15,30, 2, "overshootout")
+
+			if #parent.anchors>1 then
+				boss_incriment_stage(boss,2)
+			else
+				boss_incriment_stage(boss,3)
+			end
+
 			del(parent.anchors,_e)
+
+		elseif deathmode==3 then
+			new_bulcancel(30, 30, true)
 		end
 
 		spawn_pickup(_e.x,_e.y,coin_amounts[_e.type],1.5)
@@ -497,7 +522,13 @@ function upd_enem(_e)
 
 	_e.t+=1
 
+	if(_e.lerpperc>=0)upd_lerp(_e)
 	if(_e.brain)upd_brain(_e,_e.brain)
+	if _e.intropause<=0 then
+		foreach(_e.turrets,upd_turret)
+	else 
+		_e.intropause-=1
+	end
 	if(_e.path)follow_path(_e)
 
 	_e.x,_e.y=_e.ox+_e.sx,_e.oy+_e.sy
@@ -512,32 +543,13 @@ function upd_enem(_e)
 	if(_e.path and player_lerp_delay<=0)enem_path_shoot(_e)
 end
 
-function upd_brain(_e, _index)
-	-- tokens
-	if(_index==1 and (_e.t+50)%90==0 and _e.y>5 and _e.y<80 and _e.y<player_y)add(_e.patterns, create_spawner(11,_e,_e.dir)) -- the bullet shooting for that one specific anchor
-	
-	-- boss_a
-	if _index==2 then
-		_e.oy=sin(_e.t*.003)*5
 
-		if _e.lerpperc<100 then
-			_e.lerpperc=min(_e.lerpperc+_e.lerpspeed,100)
-			local new_t=easeinoutquad(_e.lerpperc*.01)
-			if _e.lerptype == "overshootout" then
-				new_t=easeoutovershoot(_e.lerpperc*.01)
-			end
-			_e.sx,_e.sy=lerp(_e.originx,_e.tx,new_t),lerp(_e.originy,_e.ty,new_t)
-		end
-	end
-end
 
 -- start x/y 
 -- target x/y
 function new_lerpbrain(_e,_tx,_ty, _spd, _type)
-	_e.originx,_e.originy,_e.tx,_e.ty=_e.sx,_e.sy,_tx,_ty
-	_e.lerpspeed,_e.lerpperc=_spd,0
-
-	_e.lerptype=_type or "easeoutin"
+	_e.originx,_e.originy,_e.tx,_e.ty,_e.lerpspeed,_e.lerpperc=_e.sx,_e.sy,_tx,_ty,_spd,0
+	_e.lerptype=_type or "easeOutIn"
 end
 
 function enem_path_shoot(_e)
@@ -566,9 +578,9 @@ function follow_path(_e)
 	local y=lerp(path[step].y,path[step+1].y,tlerp)
 
 	add(_e.pathx,x)
-	if(#_e.pathx>2)del(_e.pathx,_e.pathx[1])
+	if(#_e.pathx>2)deli(_e.pathx,1)
 	add(_e.pathy,y)
-	if(#_e.pathy>2)del(_e.pathy,_e.pathy[1])
+	if(#_e.pathy>2)deli(_e.pathy,1)
 
 	_e.ox=avg(_e.pathx)
 	_e.oy=avg(_e.pathy)
@@ -584,4 +596,25 @@ function delete_enem(_e)
 	for anchor in all(_e.anchors) do anchor.dead=true del(enems,anchor) end -- remove all anchors if the object dies
 	for spawn in all(_e.patterns) do del(spawners,spawn) end -- delete spawners if the baddie dies
 	del(enems,_e)
+end
+
+
+
+-- turrets
+
+-- add information to turret
+function add_turret(_e, _data)
+	local new_turret={_e}
+	for item in all(turret_data[_data]) do add(new_turret, item) end
+	add(_e.turrets, new_turret)
+end
+
+function upd_turret(_data)
+	-- shot index , shot rate
+	-- direction , offset x/y , rate offset
+	local enem,index,rate,dir,ox,oy,rox=unpack(_data)
+	local tdir = dir
+	if(dir=="?")tdir=enem.dir
+	if(dir=="-?")tdir=-enem.dir
+	if((enem.t+rox)%rate==0)add(enem.patterns, create_spawner(index,enem,tdir,nil,ox,oy))
 end

@@ -14,8 +14,9 @@ function init_bulfuncs(_bul_library)
 end
 
 function upd_bulfuncs()
-	foreach(spawners,upd_spawner)
 	foreach(buls,upd_bul)
+	if(shot_pause>0)spawners={}
+	foreach(spawners,upd_spawner)
 end
 
 function drw_bulfuncs()
@@ -31,16 +32,16 @@ function iterate_filters(bul)
 		if bul.life>fstart then
 			local ftype=filter.type
 			if ftype=="fspeed" then
-					bul.spd = bul.spd<0.1 and 0 or bul.spd*filter.rate
+				bul.spd = bul.spd<0.1 and 0 or bul.spd*filter.rate
 			elseif ftype=="ftarget" then
-					bul.dir=filter.direction==-1 and get_player_dir(bul.x,bul.y) or filter.direction
-					bul.spd=filter.speed
-					if(bul.circ_data)bul.circ_data.rate=0
-					del(bul.filters,filter)
+				bul.dir=filter.direction==-1 and get_player_dir(bul.x,bul.y) or filter.direction
+				bul.spd=filter.speed
+				if(bul.circ_data)bul.circ_data.rate=0
+				del(bul.filters,filter)
 			elseif ftype=="fspawn" then
-					create_spawner(filter.spawn, {x=bul.x,y=bul.y}, bul.dir)
-					del(bul.filters,filter)
-					del(buls,bul)
+				create_spawner(filter.spawn, {x=bul.x,y=bul.y}, bul.dir)
+				del(bul.filters,filter)
+				del(buls,bul)
 			end
 		end
 		if(fend!=-1 and bul.life>fend)del(bul.filters,filter)
@@ -48,29 +49,27 @@ function iterate_filters(bul)
 end
 
 function do_filter(bul, ref)
- local type,d2,d3,d4,d5,d6,d7=unpack(bul_library[ref])
- 
- local new_filter={
-  f_start=d3,
-  f_end=-1,
- }
+	local type,d2,d3,d4,d5,d6,d7=unpack(bul_library[ref])
+	
+	local new_filter={
+		f_start=d3,
+		f_end=-1,
+	}
 
- if type == "fspeed" then
-  new_filter.type="fspeed"
-  new_filter.rate=d5
-  new_filter.f_end=d4
-  if(d2!=0)do_filter(bul,d2)
- elseif type == "ftarget" then
-  new_filter.type="ftarget"
-  new_filter.direction=d4
-  new_filter.speed=d5
-  new_filter.f_start+=rnd(d6)
- elseif type == "fspawn" then
-  new_filter.type="fspawn"
-  new_filter.spawn=d4
- end
+	new_filter.type=type
+	if type == "fspeed" then
+		new_filter.rate=d5
+		new_filter.f_end=d4
+		if(d2!=0)do_filter(bul,d2)
+	elseif type == "ftarget" then
+		new_filter.direction=d4
+		new_filter.speed=d5
+		new_filter.f_start+=rnd(d6)
+	elseif type == "fspawn" then
+		new_filter.spawn=d4
+	end
 
- add(bul.filters,new_filter)
+	add(bul.filters,new_filter)
 end
 
 
@@ -91,8 +90,8 @@ function upd_bul(bul)
         bul.circ_data.scale=min(cd.scale+cd.dscale*0.01,1)
 
         local scale=cd.radius*cd.scale
-        bul.ox+=sin(cd.pos)*scale
-		bul.oy+=cos(cd.pos)*scale+sin(cd.pos)
+        bul.ox=sin(cd.pos)*scale
+		bul.oy=cos(cd.pos)*scale+sin(cd.pos)
     end
 
     bul.x,bul.y=bul.wx+bul.ox,bul.wy+bul.oy
@@ -108,12 +107,6 @@ end
 -- tool
 function spawn_bul(_x,_y,_type,_dir,_speed,_ani_speed)
 	local hb_index=1 -- give bullet default hurtbox
-
-	--[[
-
-		ADD INFORMATION HERE TO CHANGE HITBOX SIZE :))
-
-	]]
 
     -- creates bullet at location , of type , with direction / speed , and set animation speed
 	local bul={
@@ -137,7 +130,7 @@ function spawn_bul(_x,_y,_type,_dir,_speed,_ani_speed)
 		spawn=t, -- frame it was spawned on
 		life=0,  -- frames that it has been spawned for  -- probably could be condensed , but I can't be bothered
   
-  filters={},
+  		filters={},
 	}
 	add(buls,bul) -- add to list
 
