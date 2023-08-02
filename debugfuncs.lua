@@ -1,25 +1,12 @@
 
-debug=""
-debug_time=0
+-- debug,debug_time="",0
 
-poke(0x5f2e,1) -- keeps the colours on quit
-
-function ndebug(_msg, _time) -- new debug_msg
-	debug=_msg
-	debug_time=_time or 60
-end
-
-function drw_debug()
-	if debug_time>0 then
-		debug_time-=1
-		if(debug_time<=0)debug=""
-	end
-
-	print(debug,1+cam_x,122,7)
-end
+-- poke(0x5f2e,1) -- keeps the colours on quit
 
 
 function debug_hitboxes()
+	
+	--[[
 	-- player col , pul col , enem col , bul col
 	local plcol,pulcol,encol,bulcol=10,11,10,11
 
@@ -34,6 +21,13 @@ function debug_hitboxes()
 	end
 
 
+	if target_stance==1 then 
+		draw_hitbox(player_x, player_y-10, player_laser_data.hb, pulcol)
+	end
+
+	if time_in_stance_b>0 and time_in_stance_b < 30 then
+		rect(opt_x-8,lerp(player_y,opt_y,op_perc),opt_x+9,player_y,3)
+	end
 
 	for pul in all(puls) do
 		draw_hitbox(pul.x,pul.y,pul.hb,pulcol)
@@ -42,6 +36,9 @@ function debug_hitboxes()
 	for opul in all(opuls) do
 		draw_hitbox(opul.x,opul.y,opul.hb,pulcol)
 	end
+	]]--
+
+	draw_hitbox(opt_burst.x,opt_burst.y,opt_burst.hb,13)
 end
 
 function draw_hitbox(_x,_y,hb,_c)
@@ -49,14 +46,18 @@ function draw_hitbox(_x,_y,hb,_c)
 	rect(x,y,x+hb.w-1,y+hb.h-1,_c)
 end
 
+
+--[[
 function start_at(_num)
 	map_timeline=_num
 
     local current_target=1
 	for spawn in all(enemy_spawns) do
-		if(map_timeline>spawn[1])current_target+=1
+		if(_num>spawn[1])current_target+=1
 	end
 
 	map_spawnstep=current_target
 	map_nextspawn=enemy_spawns[map_spawnstep]
+
 end
+]]--

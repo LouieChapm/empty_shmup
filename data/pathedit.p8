@@ -2,8 +2,8 @@ pico-8 cartridge // http://www.pico-8.com
 version 41
 __lua__
 
-bg_col=14
-ln_col=13
+bg_col=10
+ln_col=11
 
 -- things to make the numbers nicer
 dtime=1/60
@@ -133,7 +133,7 @@ function _draw()
 	x,y=x+(tx*dist)+0.5,y+(ty*dist)+0.5
 	line(x,y,x+(tx*enem.spd*1),y+(ty*enem.spd*1),11)
 
-	drw_bulfuncs()
+	foreach(buls,drw_bulfunc)	
 
 	if(show_ui)draw_information()
 
