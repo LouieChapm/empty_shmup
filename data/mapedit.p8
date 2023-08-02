@@ -10,7 +10,7 @@ __lua__
 
 #include inf_crumbs.txt
 #include inf_patterns.txt
-#include inf_sprites.txt
+#include inf_sprites_1b.txt
 #include inf_spawns.txt
 #include inf_enems.txt
 

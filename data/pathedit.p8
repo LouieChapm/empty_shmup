@@ -21,7 +21,7 @@ types=split"init,tspd,tdir,wait,goto"
 numbers=split("0,1,2,3,4,5,6,7,8,9,-,.",",",false)
 
 #include info_path_editor.txt
-#include inf_sprites.txt
+#include inf_sprites_1b.txt
 #include inf_patterns.txt
 #include inf_crumbs.txt
 #include inf_enems.txt

@@ -84,7 +84,7 @@ function player_hurt(_source)
 	player_lerpx_1,player_lerpx_2,delx,dely=player_x,player_x,player_lerpx_1,player_lerpy_1
 	player.x,player.y=player_lerpx_1,player_lerpy_1
 	
-	save("player_lerp_perc,player_lerp_delay,player_immune,player_flash,combo_num,combo_counter,ps_laser_length,live_preview_offset,live_flash,bombs,max_rank","0,30,180,180,0,0,0,1,30,1,600")
+	save("player_lerp_perc,player_lerp_delay,player_immune,player_flash,combo_num,combo_counter,ps_laser_length,live_preview_offset,live_flash,bombs,max_rank,draw_particles_above","0,30,180,180,0,0,0,1,30,1,600,30")
 	lives-=1
 
 	new_bulcancel(30, 75)
@@ -107,7 +107,7 @@ function damage_enem(hit, damage_amount, ignore_invuln)
 	if hit.t>30 then
 
 		-- intropause means you can chain the combo off the boss before it's taking damage
-		combo_num+=target_stance==1 and .2 or .1  --~~ roughly the same
+		combo_num+=target_stance==1 and (boss_active and .1 or .2) or .1  --~~ roughly the same
 
 		if(hit.intropause<=0)hit.health-=damage_amount
 	elseif ignore_invuln then
@@ -161,7 +161,7 @@ function player_shoot()
 
 	for i=1,#psoff,2 do
 		local index=ceil(i*.5)
-		local bul=new_bul(false,player_x+psoff[i]+bnk_offset,player_y+psoff[i+1],2,psdir[index])
+		local bul=new_bul(false,player_x+psoff[i]+bnk_offset,player_y+psoff[i+1],3,psdir[index])
 	end
 
 	plast=pr8 -- set last shot to shot rate
@@ -171,8 +171,8 @@ end
 
 function drw_option(opt)
 	if opt.above==opt_draw_above then
-		if(opt.muz>0)sspr_obj(split"23,24"[2-opt.muz\1],opt.x,opt.y-5)opt.muz-=0.5
-		sspr_anim(4,opt.x,opt.y)
+		if(opt.muz>0)sspr_obj(split"19,20"[2-opt.muz\1],opt.x,opt.y-5)opt.muz-=0.5
+		sspr_anim(2,opt.x,opt.y)
 	end
 end
 
@@ -189,7 +189,7 @@ end
 
 function opt_shoot(_option)
 	if(_option.shot_count>olm)return
-	local bul=new_bul(_option,_option.x,_option.y-5,5,_option.dir)
+	new_bul(_option,_option.x,_option.y-5,4,_option.dir)
 
 	_option.shot_count+=1
 	_option.muz=2
@@ -213,7 +213,7 @@ function drw_player_laser()
 		rectfill(player_x-width,sy-1,player_x+width+1,ps_laser_hit_height, col)
 	end
 
-	sspr_obj(57,player_x,player_y-11)
+	sspr_obj(22,player_x,player_y-11)
 	
 	circfill(player_x+t%2,player_y-9,3+(t\6)%3,7)
 end

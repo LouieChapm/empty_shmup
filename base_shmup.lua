@@ -52,19 +52,6 @@ function new_bul(_option, _x, _y,_type,_dir)
 	opt=_option})
 end
 
---[[
-function muzzle_flash()
-	if pmuz>0 then
-		pmuz-=0.5 -- "decount" muzzle flash animation
-		for i=-5,5,10 do
-			local x_position=player_x-i
-			if(bnk_offset>0 and i<0)x_position-=3		-- change muzzle positions if the player is shooting
-			if(bnk_offset<0 and i>0)x_position+=3		-- seperate check for each muzzle , bad but this is staying
-			sspr_obj(split"13,14,15,16"[4-pmuz\1],x_position,player_y+2)
-		end
-	end
-end
-]]--
 
 -- draws a single bullet
 -- designed to be used with foreach
@@ -187,8 +174,7 @@ end
 -- basic aabb collisions
 function col(a,b)
     local ahb,bhb=a.hb,b.hb
-    local ax,ay=a.x+ahb.ox,a.y+ahb.oy
-    local bx,by=b.x+bhb.ox,b.y+bhb.oy
+    local ax,ay,bx,by=a.x+ahb.ox,a.y+ahb.oy,b.x+bhb.ox,b.y+bhb.oy
 
     return ay<=by+bhb.h-1
        and by<=ay+ahb.h-1
@@ -240,21 +226,6 @@ function spawn_anchor(_parent, _type, _origin_x, _origin_y, _is_active, _brain, 
 	return unit
 end
 
--- enemy functions
---8151
-function spawn_enem(_path, _type, _spawn_x, _spawn_y, _ox, _oy)
-	
-	local enemy=setmetatable({},{__index=_ENV})
-	local _ENV=enemy
-	s,health,hb,deathmode,sui_shot,value,elite,exp=unpack(enemy_data[_type])
-	hb,elite,active,type,sx,sy,ox,oy,x,y,t,shot_index,perc,flash,path_index,pathx,pathy,anchors,patterns,turrets,lerpperc,intropause=gen_hitbox(hb),elite==1,true,_type,_spawn_x,_spawn_y,_ox or 0, _oy or 0,63,-18,0,1,0,0,_path,{},{},{},{},{},-1,0
-
-	if(_path)depth,path=gen_path(crumb_lib[_path])
-	if(_type==5)active=false spawn_anchor(_ENV,3,-3,-2)spawn_anchor(_ENV,4,3,-2)
-	if(_type==7)spawn_anchor(_ENV,8,0,-1,false,4,1)
-
-	return add(enems,_ENV)
-end
 
 -- generates a path for the enemy to follow
 -- required reading for spawn_enem()
@@ -272,7 +243,7 @@ end
 function kill_enem(_enemy)
 	if(_enemy.exp>=0)new_explosion(_enemy.x,_enemy.y,_enemy.exp)
 
-	spawn_pickup(_enemy.x,_enemy.y,coin_amounts[_enemy.type],1.5)
+	spawn_pickup(_enemy.x,_enemy.y,_enemy.coin_value,1.5)
 	
 	give_score(_enemy.value*(max_rank<0 and 1 or .8))
 
@@ -285,62 +256,32 @@ function kill_enem(_enemy)
 	delete_enem(_enemy)
 end
 
+function enem_sub_health(_enemy)
+	local deathmode,ex,ey,parent=_enemy.deathmode,_enemy.x,_enemy.y,_enemy.anchor
+	if deathmode==1 then
+		-- deathmode data for a specific enemy
+	end
+
+	-- used to delay the sprite disappearing for bosses
+	if _enemy.death_delay then 
+		_enemy.death_delay-=1
+		if _enemy.death_delay<0 then
+			kill_enem(_enemy)
+			boss_active,pause_timeline=false,false
+		end
+	else
+		kill_enem(_enemy)
+	end
+	
+end
+
 function upd_enem(_enemy)
 	-- health stuff
 	-- kill enemy on zero health
 	-- todo completely move this to it's own "damage_enemies()" function
 		
 	if _enemy.health<=0 then
-
-		local deathmode,ex,ey,parent=_enemy.deathmode,_enemy.x,_enemy.y,_enemy.anchor
-		if deathmode==1 then
-			del(parent.anchors,_enemy)
-			if(#parent.anchors<=0)parent.active=true
-		elseif deathmode==2 then
-			new_bulcancel(30, 30)
-			new_lerpbrain(parent,parent.x-sgn(_enemy.ox)*15,30+eqrnd"10", 2, "overshootout")
-			del(parent.anchors,_enemy)
-			del(enems,_enemy)
-
-		elseif deathmode==3 or deathmode==4 then
-			if(t%4==0)spawn_pickup(_enemy.x,_enemy.y,1,3.5) -- tokens
-
-			if not _enemy.death_delay then
-
-				new_bulcancel(30, 75, true) 
-
-				_enemy.disabled,_enemy.death_delay=true,120
-				save("combo_freeze,combo_counter,boss_active","160,100,false")
-
-				give_score(10000,1)
-
-				for anchor in all(_enemy.anchors) do 
-					anchor.disabled,anchor.turrets=true,{}
-				end
-
-				if deathmode==4 then
-					spawn_pickup(90,-20,1,0,2)
-					add_expqueue(ex,ey,0,"0,-40,10|10,-25,4|20,-12,-5|30,12,13|40,25,0|50,30,-10|60,-40,10|70,-25,4|80,-12,-5|90,12,13|100,25,0|110,30,-10")
-					poke(0x314d, peek(0x314d)&127)
-				end
-
-				if(deathmode==3)save("spiral_lerpperc,spiral_exit,spiral_pause","0,true,240")
-			end
-		elseif deathmode==5 then
-			spawn_pickup(ex,ey,1,1,3) -- spawns an "add bomb" pickup
-		end
-
-		-- used to delay the sprite disappearing for bosses
-		if _enemy.death_delay then 
-			_enemy.death_delay-=1
-			if _enemy.death_delay<0 then
-				kill_enem(_enemy)
-				boss_active,pause_timeline=false,false
-			end
-		else
-			kill_enem(_enemy)
-		end
-		
+		enem_sub_health(_enemy)
 		return
 	end
 

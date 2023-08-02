@@ -1,17 +1,3 @@
--- THINGS TO CHANGE AFTER THE CARAVAN --
-
-Change Type B laser combo add on frame to add slightly less when facing bosses . A number might need to be found- but .2 is just way too high on bosses , but feels good on everything else
-
-Combo number colours are wrong from 750 to 1k
-
-
-
-
-
-
-
-
-
 -- SCORING --
 
 laser and normal give roughly the save combo / score

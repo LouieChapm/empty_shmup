@@ -6,7 +6,7 @@ fmenu_cart_address="shmup_menu.p8"
 #include data/inf_crumbs.txt
 #include data/inf_spawns.txt
 #include data/inf_patterns.txt
-#include data/inf_sprites_1b.txt
+#include data/inf_sprites.txt
 #include data/inf_enems.txt
 
 #include src/mapfuncs.lua
@@ -15,7 +15,7 @@ fmenu_cart_address="shmup_menu.p8"
 #include src/expfuncs.lua
 
 #include base_shmup.lua
-#include type_b.lua
+#include type_a.lua
 
 -- #include debugfuncs.lua
 
@@ -29,6 +29,8 @@ fmenu_cart_address="shmup_menu.p8"
 
 	1,343,570
 ]]
+
+
 
 function _init()
 
@@ -49,91 +51,12 @@ function _init()
 
 	music(0,5000)
 
-	--gen moon
-	-- save old spritesheet
-	memcpy(0xc000,0x0,0x2000)
-
-	-- clear spritesheet
-	memset(0,0,0x2000)
-
-	-- save seed
-	srand"0xffb3"
-
-	-- set the crater region to 0 if it's not zero
-	memset(0x8000,0,0x4000)
-	for x=-4,7,.7 do
-		for y=3,9,.7 do
-			if rnd"1"-x/14+y/4<1.4 then  -- this might break what the moon looks like
-				local r,cx,cy=rnd(10+y/16),64+x*12,64+y*10
-				for	px=mid(cx-r,0,127),mid(cx+r,0,127) do
-					for py=mid(cy-r,0,127),mid(cy+r,0,127) do
-						local dx,dy=px-cx,py-cy
-						if(dx*dx+dy*dy<r*r)poke(0x8000+px*128+py,1)
-					end
-				end
-			end
-		end
-	end
-
-	for py=0,128 do
-		for px=0,128 do
-			local dither,x,y=(px+py)%2==0,px/128,py/128
-			local rx,ry=(x-.5)*2,(y-.5)*2
-			local outer_d=sqrt(rx*rx+ry*ry)
-			
-			if outer_d<1.0 then
-				local ix,iy=(x-0.6)+sin(x*10+y*10)/80+sin(x*.5+.4+y*.8)/30,(y-0.40)+sin(x*7+y*14)/80+sin(x*.5+.4+y*.8)/30
-				local inner_d=sqrt(ix*ix+iy*iy-ix/9)+rnd(.04)
-
-				local c=inner_d<0.57 and dither and 1 or inner_d<0.55 and 1 or inner_d<0.48 and dither and 8 or  13
-				if inner_d<0.45	then	
-					c=8
-					local cx=rx/cos(atan2(sqrt(1-ry*ry),-ry))
-					local tx,ty=mid(flr(63+cx*64),0,127),mid(flr(63+ry*64),0,127)
-					
-					if peek(0x8000+tx*128+ty)==1 then
-						c=1
-						if (peek(0x8000+min(tx+1,127)*128+min(ty-1,127))!=1) c=13
-					end
-				end
-			
-			--	add to spritesheet
-			sset(px,py,c)
-			end
-		end
-	end
-
-
-	--	save data
-	memcpy(0x8000,0x0,0x2000)
-	--	restore	spritesheet
-	memcpy(0x0,0xc000,0x2000)
-	-- gen moon
-
-
-	--[[
-		segments
-
-		intro = 1,
-		start = 1,9,1
-		  mid = 12,1,9,1,0,1,9,1
-		 late = 13,1,1,1,12,1,1,1,
-		late2 = 13,1,1,
-		late3 = 13,1
-	]]--
-
-
-	-- used for lerping players to specific positions
-	
-	-- start_at(3249)
-	-- start_at(7700) -- pre midboss
-
 	palt(0,false)
 
 	-- index, rate, direction, ox, oy, rate offset
 
 	-- all bletters have 8,13 w/h
-	turret_data,combo_big_letters,pickup_colours,moon_active,speed_changes,spiral_exit,slow_motion=parse_data"11,120,?,0,0,0|16,90,-1,0,0,0|15,15,?,-10,4,0|15,15,-?,10,4,0|19,120,.75,0,0,45|27,50,.75,0,-2,0|16,160,-1,-10,-10,0|16,160,-1,10,-10,90|27,50,.25,0,-2,25|36,120,.75,0,0,30|60,45,.75,0,0,0|64,25,-1,0,0,0|68,76,.75,0,0,0|70,45,.75,0,0,0|71,120,-1,0,0,23|72,120,-1,0,0,0|76,200,-1,0,0,100|77,3,.75,0,0,0|80,30,.75,0,0,0|41,8,.75,0,0,0|83,90,-1,0,0,0|83,90,-1,0,0,45|67,75,.75,0,0,0|88,75,-1,0,0,23|72,120,-1,0,0,60|74,30,.75,0,0,0|89,5,.75,0,0,0",parse_data"89,39|78,52|86,52|94,52|102,50|115,73|57,39|65,39|73,39|81,39",parse_data"0,8,9|10,11,12|1,2,3",false,parse_data"1000,3.5|2000,6|3250,0|3252,-.5|7650,.001|7950,0|15000,6969",false,false
+	turret_data,combo_big_letters,pickup_colours,speed_changes,spiral_exit,slow_motion=parse_data"11,120,?,0,0,0|16,90,-1,0,0,0|15,15,?,-10,4,0|15,15,-?,10,4,0|19,120,.75,0,0,45|27,50,.75,0,-2,0|16,160,-1,-10,-10,0|16,160,-1,10,-10,90|27,50,.25,0,-2,25|36,120,.75,0,0,30|60,45,.75,0,0,0|64,25,-1,0,0,0|68,76,.75,0,0,0|70,45,.75,0,0,0|71,120,-1,0,0,23|72,120,-1,0,0,0|76,200,-1,0,0,100|77,3,.75,0,0,0|80,30,.75,0,0,0|41,8,.75,0,0,0|83,90,-1,0,0,0|83,90,-1,0,0,45|67,75,.75,0,0,0|88,75,-1,0,0,23|72,120,-1,0,0,60|74,30,.75,0,0,0|89,5,.75,0,0,0",parse_data"89,39|78,52|86,52|94,52|102,50|115,73|57,39|65,39|73,39|81,39",parse_data"0,8,9|10,11,12|1,2,3",parse_data"1000,3.5|2000,6|3250,0|3252,-.5|7650,.001|7950,0|15000,6969",false,false
 	meter_colours,combo_colours,map_segments=unpack(parse_data"8,8,9,9,2,2,2,3,3,12,12|0,8,9,1,2,3,10,11,12,10,12,10,7,7,7|1, 1,9,1,1,9,1,1,9,1,1,9,1,1,9,1,1,9,1,1,9,1,1,9,1,1,9,1, 12,1,9,1,0,1,9,1,12,1,9,1,0,1,9,1,12,1,9,1,0,1,9,1,1,1,9,1,1,1,9,1, 13,1,1,1,12,1,1,1,13,1,1,1,12,1,1,1,13,1,1,1,12,1,1,1,13,1,1,1,12,1,1,1,13,1,1,1,13,1,1,1,13,1,1,1,13,1,1,1, 13,1,1,13,1,1,13,1,1,13,1,1,13,1,1,13,1,1, 13,1,13,1,13,1,13,1,13,1,13,1,13,1,13,1,13,1, 2,3,3,3,3,3,3,3,3,3,3, 3,3,4,5,6,7,6,5,6,7,6,6,7,6,6,10, 3,3,3,3,3, 14,15,15,15,15,16,15,15,16,15,15,16,17,18,19,18")
 end
 
@@ -162,20 +85,13 @@ function _update60()
 		speed_target=abs(new_speed)
 		deli(speed_changes,1)
 	end
-	map_speed=lerp(map_speed,speed_target,map_timeline > 7500 and .01 or .001)
+	map_speed=lerp(map_speed,speed_target,.001)
 
 
 	if max_rank>=0 then
 		max_rank-=1
 		if(combo_num>50)max_rank=-1
 	end
-
-	--[[
-		would be cool to have a flash and shoot debris when you 
-		leave the station
-	]]
-	spawn_boss(3250,boss_b)		-- midboss
-	spawn_boss(7850,boss_a)		-- stage boss
 
 	upd_mapfuncs()
 	upd_bulfuncs()
@@ -186,8 +102,6 @@ function _update60()
 
 	if(not input_disabled and player_lerp_perc<0)player_shoot()
 	
-	moon_y+=.02
-
 	-- camera stuff
 	cam_x=mid(-16,flr((player_x-64)*0.25),16)
 	camera(cam_x,0)
@@ -211,44 +125,8 @@ function _draw()
 
 	if(screen_flash>0)rectfill(0+cam_x,0,128+cam_x,128,7)screen_flash-=1 return
 	
-	-- draw moon
-	for item in all(split"700,2400,3000,3750,4800,6550") do
-		if(map_timeline==item)moon_active=not moon_active
-	end
 	
-	if moon_active then
-		palt(0,true)
-		pal(1,0)
-
-		--	move moon to spritesheet	
-		memcpy(0x0000,0x8000,0x2000)
-
-		sspr(0,0,128,128,cam_x*.85,moon_y)
-
-		-- restore spritesheet
-		memcpy(0x0,0xc000,0x2000)
-
-		pal(1,1)
-		palt(0,false)
-	end
-	-- draw moon
-	
-	-- draw map
-	palt(cur_transparent,false)
-	palt(15,true)
-	if map_timeline>3680 and map_timeline<7900 then 
-		local celx,cely,sx,celw,celh,rx,ry = unpack(map_timeline>5000 and split"120,10,30,8,9,.25,.5" or split"123,0,44,5,10,.25,.25")
-		for y=-8*celh,128,celh*8 do
-			map(celx,cely,sx+cam_x*rx,y+(t*.25)%(celh*8),celw,celh)
-		end
-	end
-
-	for i,mapseg in inext,map_segments do
-		map(mapseg\4*20,(3-mapseg%4)*8,-16,map_progress-i*64,20,8)
-	end
-	palt(cur_transparent,true)
-	palt(15,false)
-	-- draw map
+	draw_map()
 
 	if(draw_particles_above<0)foreach(parts,drw_part)
 
@@ -265,6 +143,44 @@ function _draw()
 
 	foreach(buls,drw_bulfunc)								-- enemy projectiles
 	
+	draw_ui()
+
+	if(spiral_pause>0)spiral_pause-=1
+	spiral_anim(lerp(tonum(spiral_exit),tonum(not spiral_exit),spiral_lerpperc))
+end
+
+-->8
+-- stage specific enemy functions
+
+--8151
+function spawn_enem(_path, _type, _spawn_x, _spawn_y, _ox, _oy)
+	local enemy=setmetatable({},{__index=_ENV})
+	local _ENV=enemy
+	s,health,hb,deathmode,sui_shot,value,elite,exp,coin_value=unpack(enemy_data[_type])
+	hb,elite,active,type,sx,sy,ox,oy,x,y,t,shot_index,perc,flash,path_index,pathx,pathy,anchors,patterns,turrets,lerpperc,intropause=gen_hitbox(hb),elite==1,true,_type,_spawn_x,_spawn_y,_ox or 0, _oy or 0,63,-18,0,1,0,0,_path,{},{},{},{},{},-1,0
+
+	if(_path)depth,path=gen_path(crumb_lib[_path])
+	-- if(_type==5)active=false spawn_anchor(_ENV,3,-3,-2)spawn_anchor(_ENV,4,3,-2)
+
+	return add(enems,_ENV)
+end
+
+function draw_map()
+	-- draw map
+	palt(cur_transparent,false)
+	palt(15,true)
+
+	for i,mapseg in inext,map_segments do
+		map(mapseg\4*20,(3-mapseg%4)*8,-16,map_progress-i*64,20,8)
+	end
+	palt(cur_transparent,true)
+	palt(15,false)
+	-- draw map
+end
+
+-- drawing reorganisation
+function draw_ui()
+	-- boss health bar
 	if boss_active and boss.health>0 then 
 		local x_position=cam_x+3
 		rectfill(x_position,3,x_position+121*(boss.health/boss_maxhealth),4,7)
@@ -273,14 +189,14 @@ function _draw()
 	local ox,oy,str_combo=3+cam_x,3,tostr(combo_num\1)
 	if(boss_active)oy+=6	
 	if(combo_num==0)score_in_combo=0
-	
+
 	highest_combo=tostr(max(highest_combo,str_combo))
-	
+
 	--local score_text=t%720<180 and score_in_combo>5000 and "+"..tostr(score_in_combo,0x2).."0" or t%720>540 and "max  "..highest_combo.."HIT" or tostr(score,0x2).."0" 
-	
+
 	local is_highscore_text=t%720>480 and not boss_active
 	local score_text=is_highscore_text and "HIGH "..highscore or tostr(score,0x2).."0" 
-	
+
 	?score_text,ox+125-#score_text*4,oy-1,global_flash and 13 or 0
 	?score_text,ox+125-#score_text*4,oy-2,is_highscore_text and 6 or 7
 
@@ -317,19 +233,19 @@ function _draw()
 	ox-=1
 	rectfill(ox,oy - clamped_counter/5.9,3+ox,oy,meter_colours[1+clamped_counter\10])
 
-	sspr_obj(86,cam_x-1,-1)
-	
+	sspr_obj(61,cam_x-1,-1)
+
 	-- ?"_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\n_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\n_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\f4\|5\r_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\n_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\n_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_",cam_x+7,-3,5
-	
+
 	?"⁶x3_____________\n_____________\n_____________\f4\|5\r_____________\n_____________\n_____________",cam_x+7,-3,5
-	sspr_obj(87,cam_x-5,-1)
+	sspr_obj(62,cam_x-5,-1)
 
 
 	rect(ox+4,14,ox+15,17,4)
 	rect(ox+4,14,ox+15,16,5)
 
 
-	
+
 	if t%500<150 then 
 		?"MAX",ox+6,2,7
 		text=highest_combo.."\f7HIT"
@@ -351,7 +267,7 @@ function _draw()
 			if(bomb_flash==0)bomb_preview_offset=0
 			if(global_flash)goto fuck_tokens
 		end
-		sspr_obj(74,ox+9*i-6,122)
+		sspr_obj(60,ox+9*i-6,122)
 	end
 	::fuck_tokens::
 
@@ -364,12 +280,9 @@ function _draw()
 			if(live_flash==0)live_preview_offset=0
 			if(global_flash)goto skip_this_bullshit
 		end
-		sspr_obj(72,ox-9*i,122)
+		sspr_obj(21,ox-9*i,122)
 	end
 	::skip_this_bullshit::
-
-	if(spiral_pause>0)spiral_pause-=1
-	spiral_anim(lerp(tonum(spiral_exit),tonum(not spiral_exit),spiral_lerpperc))
 
 end
 
@@ -432,29 +345,6 @@ function upd_combo()
 	end
 end
 
-
--->8
--- map / background 
-
---[[
-function drw_map()
-	palt(cur_transparent,false)
-	palt(15,true)
-	if map_timeline>3680 and map_timeline<7900 then 
-		local celx,cely,sx,celw,celh,rx,ry = unpack(map_timeline>5000 and split"120,10,30,8,9,.25,.5" or split"123,0,44,5,10,.25,.25")
-		for y=-8*celh,128,celh*8 do
-			map(celx,cely,sx+cam_x*rx,y+(t*.25)%(celh*8),celw,celh)
-		end
-	end
-
-	for i,mapseg in inext,map_segments do
-		map(mapseg\4*20,(3-mapseg%4)*8,-16,map_progress-i*64,20,8)
-	end
-	palt(cur_transparent,true)
-	palt(15,false)
-end
-]]--
-
 -->8
 -- point management
 
@@ -514,7 +404,7 @@ function drw_pickup(pickup)
 	local dist=sqrt(abs(pickup_x-player_x)^2+abs(pickup_y-player_y)^2)
 
 	pickup.life+=1
-	local type,life,bonus_type,visual_anim,collect_range,y_spd=pickup.type,pickup.life,-1,6,50,.35
+	local type,life,bonus_type,visual_anim,collect_range,y_spd=pickup.type,pickup.life,-1,14,50,.35
 	is_bonus=type==2
 	if type==2 or type==3 then 
 		collect_range=20
@@ -536,7 +426,7 @@ function drw_pickup(pickup)
 	
 
 	if dist<10 then
-		spawn_oneshot(9,3,pickup_x,pickup_y)
+		spawn_oneshot(15,3,pickup_x,pickup_y)
 		del(pickups,pickup)
 
 		local _text="+bomb"
@@ -578,14 +468,10 @@ function drw_pickup(pickup)
 	pickup.x+=sin(pickup.dir)*pickup.spd
 	pickup.y+=cos(pickup.dir)*pickup.spd+y_spd
 	pickup.spd*=.95
-	-- pickup.y+=y_spd
 
 	if(pickup.seek)pickup.x,pickup.y=lerp(pickup_x,player_x,0.2),lerp(pickup_y,player_y,0.2)
 
 	if is_bonus then
-		-- local goal_list=pickup_colours[bonus_type+1]
-
-		-- if(life%90<5)src_list,flash=split"1,2,3,4,5,6,7",true
 		local flash,index=life%90<5,1
 		for src in all(flash and split"1,2,3,4,5,6,7" or split"1,2,3") do 
 			pal(src,flash and 7 or pickup_colours[bonus_type+1][index]) 
@@ -613,100 +499,6 @@ function give_score(value, multiplier)
 		end
 	end
 end
-
--->8
--- planet generation
-
---[[
-function gen_moon()
-	-- save old spritesheet
-	memcpy(0xc000,0x0,0x2000)
-
-	-- clear spritesheet
-	memset(0,0,0x2000)
-
-	-- save seed
-	srand"0xffb3"
-	
-	-- set the crater region to 0 if it's not zero
-	memset(0x8000,0,0x4000)
-	for x=-4,7,.7 do
-		for y=3,9,.7 do
-			if rnd"1"-x/14+y/4<1.4 then  -- this might break what the moon looks like
-				local r,cx,cy=rnd(10+y/16),64+x*12,64+y*10
-				for	px=mid(cx-r,0,127),mid(cx+r,0,127) do
-					for py=mid(cy-r,0,127),mid(cy+r,0,127) do
-						local dx,dy=px-cx,py-cy
-						if(dx*dx+dy*dy<r*r)poke(0x8000+px*128+py,1)
-					end
-				end
-			end
-		end
-	end
-
-	for py=0,128 do
-		for px=0,128 do
-			local dither,x,y=(px+py)%2==0,px/128,py/128
-			local rx,ry=(x-.5)*2,(y-.5)*2
-			local outer_d=sqrt(rx*rx+ry*ry)
-			
-			if outer_d<1.0 then
-			local ix,iy=(x-0.6)+sin(x*10+y*10)/80+sin(x*.5+.4+y*.8)/30,(y-0.40)+sin(x*7+y*14)/80+sin(x*.5+.4+y*.8)/30
-			local inner_d=sqrt(ix*ix+iy*iy-ix/9)+rnd(.04)
-	
-			local c=13
-			if (inner_d<0.57 and dither) c=1
-			if (inner_d<0.55)c=1
-			if (inner_d<0.48 and dither) c=8
-			if inner_d<0.45	then	
-				c=8
-				local cx=rx/cos(atan2(sqrt(1-ry*ry),-ry))
-				local tx,ty=mid(flr(63+cx*64),0,127),mid(flr(63+ry*64),0,127)
-				
-				if peek(0x8000+tx*128+ty)==1 then
-					c=1
-					if (peek(0x8000+min(tx+1,127)*128+min(ty-1,127))!=1) c=13
-				end
-			end
-			
-			--	add to spritesheet
-			sset(px,py,c)
-			end
-		end
-	end
-
-
-	--	save data
-	memcpy(0x8000,0x0,0x2000)
-	--	restore	spritesheet
-	memcpy(0x0,0xc000,0x2000)
-end
-]]--
-
---[[
-function drw_moon()
-	for item in all(split"700,2400,3000,3750,4800,6550") do
-		if(map_timeline==item)moon_active=not moon_active
-	end
-	
-	if moon_active then
-		palt(0,true)
-		pal(1,0)
-
-		--	move moon to spritesheet	
-		memcpy(0x0000,0x8000,0x2000)
-
-		sspr(0,0,128,128,cam_x*.85,moon_y)
-
-		-- restore spritesheet
-		memcpy(0x0,0xc000,0x2000)
-
-		pal(1,1)
-		palt(0,false)
-	end
-end
-]]--
-
 
 -->8
 -- boss information
@@ -737,8 +529,8 @@ end
 
 
 
+-- boss lerping stuff
 function upd_lerp(object)
-
 	-- tokens tokens tokens
 	object.lerpperc+=object.lerprate or 1
 
@@ -786,67 +578,9 @@ function boss_incriment_stage(_boss, _index, _only_iterate_forward)
 end
 
 
--- todo , I'd like to eventually completely get rid of this
-function upd_brain(enemy, _index)		
-	local y_wave=sin(enemy.t*.003)*5
-
-
-	-- boss_a
-	if _index==2 then
-		enemy.oy=y_wave
-
-		local health,data_string=enemy.health,"2100|1,1|80,1,11|250,2,11|600,1|700,3|1100,1|1150,4,20|1600,1|1750,5,21,22"
-		if health<500 then
-			if(t%30==0)draw_particles_above=30 new_explosion(enemy.x,enemy.y)
-			data_string="60|1,9"
-		elseif health<1250 or #enemy.anchors<2 then 
-			data_string="2100|1,1|80,1,11|250,7,11|600,1|700,3,16,25|1100,1|1150,4,20|1600,1|1750,8,21,22"
-			if final_boss_phase==1 then 
-				final_boss_phase,draw_particles_above=2,60
-				new_bulcancel(30, 30)
-				new_lerpbrain(enemy,enemy.x-10,enemy.y-15, 2, "overshootout")
-				add_expqueue(enemy.x,enemy.y,0,"0,-20,10|2,-10,0|7,0,-15|8,15,5|14,-20,10")
-			end
-		end
-
-
-		local data=parse_data(data_string)
-		local life=enemy.t%data[1][1]
-
-		for i=2, #data do 
-			local thresh,target,tur_a,tur_b=unpack(data[i])
-
-			if life==thresh then 
-				boss_incriment_stage(enemy,target)
-
-				for t=1,#enemy.anchors do 
-					local turret=enemy.anchors[t]
-					turret.turrets={}
-					if(tur_a)add_turret(turret,t==2 and tur_b or tur_a)
-				end
-			end
-		end
-
-
-		enemy.lerpcounter+=1
-		if #enemy.lerp_positions>1 and enemy.lerpcounter%enemy.lerpchangerate==0 then
-			enemy.lerpindex=(enemy.lerpindex%#enemy.lerp_positions)+1
-			local tx,ty=unpack(enemy.lerp_positions[enemy.lerpindex])
-			new_lerpbrain(enemy,tx,ty,enemy.lerprate)
-		end
-	elseif _index==3 then
-		enemy.ox,enemy.oy,enemy.dir=sin(enemy.t*.005)*5,y_wave,0.25+sin(t*.01)*.07
-	
-		if(boss.health<400)boss_incriment_stage(enemy,3,true)
-		if(boss.health<600)boss_incriment_stage(enemy,2,true)
-	
-	elseif	_index==4 then
-		local dir=(get_player_dir(enemy.x,enemy.y)+.03125)\.0625 -- calculate direction in seg16
-		enemy.dir=mid(.625, dir*.0625,.875)
-
-		local visible=(enemy.dir\.0625)-9
-		if(visible<0)visible=abs(visible+2)
-		if(enemy.y<player_y)enemy.s=turret_sprites[mid(1,visible,5)]
+function upd_brain(enemy, _index)
+	if _index==1 then
+		-- enemy brain at _index == 1
 	end
 end
 

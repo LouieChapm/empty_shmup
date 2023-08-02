@@ -1,12 +1,10 @@
 
--- debug,debug_time="",0
-
--- poke(0x5f2e,1) -- keeps the colours on quit
+debug,debug_time="",0
+poke(0x5f2e,1) -- keeps the colours on quit
 
 
 function debug_hitboxes()
 	
-	--[[
 	-- player col , pul col , enem col , bul col
 	local plcol,pulcol,encol,bulcol=10,11,10,11
 
@@ -36,7 +34,6 @@ function debug_hitboxes()
 	for opul in all(opuls) do
 		draw_hitbox(opul.x,opul.y,opul.hb,pulcol)
 	end
-	]]--
 
 	draw_hitbox(opt_burst.x,opt_burst.y,opt_burst.hb,13)
 end

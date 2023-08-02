@@ -180,7 +180,8 @@ function new_explosion(_originx,_originy,_size,_debris,_maxage)
 	end
 
 	if(_debris==false)return
+
 	for _=1,rnd(2+size*5)\1 do
-		new_debris(_originx,originy,.5+rnd"1.5",60+eqrnd"30",rnd(split"10,10,11,11,11,11,11,11,12,12,12,12,12,-5,-5,-5,-4,-4,-6"))
+		new_debris(_originx,originy,.5+rnd"1.5",60+eqrnd"30",rnd(split"9,9,10,10,10,10,10,11,11,11,11,11,-5,-5,-5,-4,-4,-6"))
 	end
 end
