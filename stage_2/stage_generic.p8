@@ -15,7 +15,7 @@ fmenu_cart_address="shmup_menu.p8"
 #include src/expfuncs.lua
 
 #include base_shmup.lua
-#include type_a.lua
+#include type_b.lua
 
 -- #include debugfuncs.lua
 
@@ -38,7 +38,7 @@ function _init()
 	dset(63,0)
 	highscore=tostr(dget"0",0x2).."0"
 
-	save("t,player_lerpx_1,player_lerpy_1,player_lerpx_2,player_lerpy_2,player_lerp_perc,player_lerp_speed,player_lerp_delay,player_lerp_type,combo_on_frame,map_progress,map_speed,moon_y,score_in_combo,bullet_cancel_origin,bullet_cancel,shot_pause,max_rank,speed_target,final_boss_phase,draw_particles_above,spiral_lerpperc,spiral_pause,coin_chain_timer,coin_chain_amount","0,64,150,63,95,0,2,0,easeout,0,128,2,-64,0,0,0,0,1100,2,1,-1,0,0,0,0")
+	save("t,player_lerpx_1,player_lerpy_1,player_lerpx_2,player_lerpy_2,player_lerp_perc,player_lerp_speed,player_lerp_delay,player_lerp_type,combo_on_frame,map_progress,map_speed,score_in_combo,bullet_cancel_origin,bullet_cancel,shot_pause,max_rank,speed_target,final_boss_phase,draw_particles_above,spiral_lerpperc,spiral_pause,coin_chain_timer,coin_chain_amount","0,64,150,63,95,0,2,0,easeout,0,128,2,0,0,0,0,1100,2,1,-1,0,0,0,0")
 
 	init_baseshmup(enemy_data)
 
@@ -160,6 +160,8 @@ function spawn_enem(_path, _type, _spawn_x, _spawn_y, _ox, _oy)
 	hb,elite,active,type,sx,sy,ox,oy,x,y,t,shot_index,perc,flash,path_index,pathx,pathy,anchors,patterns,turrets,lerpperc,intropause=gen_hitbox(hb),elite==1,true,_type,_spawn_x,_spawn_y,_ox or 0, _oy or 0,63,-18,0,1,0,0,_path,{},{},{},{},{},-1,0
 
 	if(_path)depth,path=gen_path(crumb_lib[_path])
+
+	-- custom enemy spawn info vvvv
 	-- if(_type==5)active=false spawn_anchor(_ENV,3,-3,-2)spawn_anchor(_ENV,4,3,-2)
 
 	return add(enems,_ENV)
@@ -319,191 +321,7 @@ function easeoutovershoot(t)
 end
 
 -->8
--- combo meter
-
-function add_ccounter(number_add, maximum_clamp)
-	if(combo_counter>100 or player_lerp_delay>0)return
-	local val=combo_counter+number_add
-	combo_counter,combo_on_frame=combo_num<=0 and 0 or min(val,max(maximum_clamp or val, combo_counter)),2
-end
-
-
-function upd_combo()
-	if pause_combo!=0 then
-		if(pause_combo>0)pause_combo-=1
-		return
-	end
-
-	if combo_freeze>0 then
-		combo_freeze-=1
-	else
-		if combo_counter>0 then 
-			combo_counter-=1
-		else
-			combo_num=0
-		end
-	end
-end
-
--->8
--- point management
-
--- make the player immune or max out
-function new_bulcancel(_speed, _stop_shots_amount, _spawn_coins)
-	bullet_cancel_origin,bullet_cancel,cancel_start_y,spawn_pickups,player_immune=_speed,0,0,_spawn_coins,max(_speed, player_immune)
-
-	-- find the lowest bullet and start from there
-	-- makes it look nicer
-	-- TOKENS if I want to get rid of this effect
-	for bul in all(buls) do 
-		if(bul.y>cancel_start_y)cancel_start_y=bul.y
-	end
-
-	-- shot pause stuff
-	if(_stop_shots_amount)shot_pause,spawners=_stop_shots_amount,{}
-end
-
-
-function upd_bulcancel()
-	local current_perc=cancel_start_y-(bullet_cancel/bullet_cancel_origin)*200
-
-	for bul in all(buls) do
-		if bul.y>current_perc then
-			if(spawn_pickups)spawn_pickup(bul.x,bul.y)
-			spawn_oneshot(9,5,bul.x,bul.y)
-			del(buls,bul)
-		end
-	end
-	bullet_cancel+=1
-	if(bullet_cancel>=bullet_cancel_origin)bullet_cancel_origin=0
-end
-
-
---8191
-function spawn_pickup(_originx,_originy,_amount,_speed,_type)
-	for _=1,_amount or 1 do
-		add(pickups,{
-			x=_originx,
-			y=_originy,
-
-			ox=0,
-			oy=0,
-
-			dir=rnd(),
-			spd=rnd(_speed) or .5,
-
-			t=t,
-			life=0,
-			type=_type or 1,
-		})
-	end
-end
-
-function drw_pickup(pickup)
-	local pickup_x,pickup_y=pickup.x+pickup.ox,pickup.y+pickup.oy
-	local dist=sqrt(abs(pickup_x-player_x)^2+abs(pickup_y-player_y)^2)
-
-	pickup.life+=1
-	local type,life,bonus_type,visual_anim,collect_range,y_spd=pickup.type,pickup.life,-1,14,50,.35
-	is_bonus=type==2
-	if type==2 or type==3 then 
-		collect_range=20
-
-		y_spd=.15
-		if not pickup.dont_wave then 
-			local sin_offset=life*.001
-			pickup.ox,pickup.oy=sin(sin_offset)*25,cos(sin_offset*2)*10
-		end
-
-		if(type==2)visual_anim,bonus_type=13,(pickup.t+life\90)%3
-		if(type==3)visual_anim,bonus_type,y_spd=14,4,.1
-	end
-
-	if player_lerp_delay<=0 and dist<collect_range then
-		pickup.seek,pickup.dont_wave,pickup.ox,pickup.oy=true,true,0,0				-- break the follow if the player is respawning
-	end
-	
-	
-
-	if dist<10 then
-		spawn_oneshot(15,3,pickup_x,pickup_y)
-		del(pickups,pickup)
-
-		local _text="+bomb"
-
-		if bonus_type==0 or bonus_type==4 then
-			-- red
-			
-			if bombs>=3 then
-				give_score(5000, 1)
-				new_text(pickup_x,pickup_y-7,"bombs full",60)
-				new_text(pickup_x+4,pickup_y,"50000",90)
-				return
-			else
-				bombs+=1
-			end
-		elseif bonus_type==1 then
-			-- green
-			lives+=1
-			live_flash,_text=60,"extend"
-		elseif bonus_type==2 then
-			-- yellow
-			give_score(1000, 1)
-			combo_num+=30
-			combo_counter,_text=160,"10000"
-		else
-			coin_chain_timer=20
-			coin_chain_amount+=1
-			local num=50*min(coin_chain_amount,10)
-			give_score(num, 1)
-			new_text(pickup_x,pickup_y,num.."0",45,true)
-			sfx(61,2)
-			return
-		end
-
-		new_text(pickup_x,pickup_y,_text,90)
-		return
-	end	
-
-	pickup.x+=sin(pickup.dir)*pickup.spd
-	pickup.y+=cos(pickup.dir)*pickup.spd+y_spd
-	pickup.spd*=.95
-
-	if(pickup.seek)pickup.x,pickup.y=lerp(pickup_x,player_x,0.2),lerp(pickup_y,player_y,0.2)
-
-	if is_bonus then
-		local flash,index=life%90<5,1
-		for src in all(flash and split"1,2,3,4,5,6,7" or split"1,2,3") do 
-			pal(src,flash and 7 or pickup_colours[bonus_type+1][index]) 
-			index+=1
-		end
-	end
-	sspr_anim(visual_anim,pickup_x,pickup_y,pickup.t)
-	if(is_bonus)allpal()
-end
-
--- _multi is the optional capped multipler
--- coins cap out at 100x 
-function give_score(value, multiplier)
-
-	-- score+=_amount*(combo_num==0 and 1 or combo_num\2) -- tokens
-	--limit of 99 999 999
-	local mult=multiplier or max(.25*combo_num^1.25,1)
-	local value=value*mult
-
- 	if score <152.58788 then
-		score+=value>>>16
-		score_in_combo+=value>>>16
-		if score>=152.58788 then
-			score,score_in_combo=152.58788,152.58788
-		end
-	end
-end
-
--->8
 -- boss information
-
-
 function spawn_boss(spawn_timeline, _data)
 	if(map_timeline!=spawn_timeline)return
 
