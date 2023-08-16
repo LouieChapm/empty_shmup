@@ -1,0 +1,1 @@
+bul_library=[[sprite,2.2,20,4,0]]
