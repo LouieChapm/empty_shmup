@@ -15,7 +15,7 @@ fmenu_cart_address="shmup_menu.p8"
 #include src/expfuncs.lua
 
 #include base_shmup.lua
-#include type_b.lua
+#include type_a.lua
 
 #include debugfuncs.lua
 
@@ -183,9 +183,7 @@ function draw_map()
 end
 
 function draw_ground()
-	
 	local open_dist = lerp(0,85,min(max(t-300,0)*.001,.6)) -- ground_closed_perc)
-
 	local x1,x2=49-open_dist,64+open_dist
 	rectfill(-30,0,x1,128,8)
 	rectfill(x2+16,0,150,128)
