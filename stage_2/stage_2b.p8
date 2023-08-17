@@ -182,9 +182,7 @@ function draw_map()
 end
 
 function draw_ground()
-	local 
-
-	for 
+ 
 end
 
 -- drawing reorganisation
