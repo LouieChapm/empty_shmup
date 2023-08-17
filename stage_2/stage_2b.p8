@@ -39,7 +39,7 @@ function _init()
 	highscore=tostr(dget"0",0x2).."0"
 
 	save("t,player_lerpx_1,player_lerpy_1,player_lerpx_2,player_lerpy_2,player_lerp_perc,player_lerp_speed,player_lerp_delay,player_lerp_type,combo_on_frame,map_progress,map_speed,score_in_combo,bullet_cancel_origin,bullet_cancel,shot_pause,max_rank,speed_target,final_boss_phase,draw_particles_above,spiral_lerpperc,spiral_pause,coin_chain_timer,coin_chain_amount","0,64,150,63,95,0,2,0,easeout,0,128,2,0,0,0,0,1100,2,1,-1,0,0,0,0")
-	save("ground_open_perc",".5")
+	save("ground_closed_perc",".5")
 
 	init_baseshmup(enemy_data)
 
@@ -128,6 +128,7 @@ function _draw()
 	
 	
 	draw_map()
+	draw_ground()
 
 	if(draw_particles_above<0)foreach(parts,drw_part)
 
@@ -182,7 +183,17 @@ function draw_map()
 end
 
 function draw_ground()
- 
+	
+	local open_dist = lerp(0,85,min(max(t-300,0)*.001,.6)) -- ground_closed_perc)
+
+	local x1,x2=49-open_dist,64+open_dist
+	rectfill(-30,0,x1,128,8)
+	rectfill(x2+16,0,150,128)
+
+	for y=-8+t%8,128,32 do
+		map(126,0,x1,y,2,4)
+		map(126,4,x2,y,2,4)
+	end
 end
 
 -- drawing reorganisation
