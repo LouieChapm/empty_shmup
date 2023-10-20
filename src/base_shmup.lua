@@ -218,7 +218,7 @@ end
 -- ENEMY FUNCTIONS --
 function spawn_anchor(_parent, _type, _origin_x, _origin_y, _is_active, _brain, _turret)
 	local unit=spawn_enem(nil,_type,0,0,_origin_x,_origin_y)
-	unit.active,unit.brain,unit.anchor=_is_active,_brain or nil,_parent
+	unit.active,unit.brain,unit.anchor=_is_active,_brain,_parent
 
 	if(_turret)add_turret(unit,_turret)
 	add(_parent.anchors,unit)
