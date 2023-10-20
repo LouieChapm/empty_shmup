@@ -32,7 +32,9 @@ function init_player()
 	-- player shoot offset , player_shoot direction , player_shoot direction 2
 	psoff,psdir=unpack(parse_data"0,-3,-4,-1,5,-1|.5,.49,.51")
 
-	player={x=63,y=140,hb=gen_hitbox(1)}
+	local hb_reg,hb_larger = gen_hitbox(1),gen_hitbox(1,parse_data"-5,-5,11,11")
+
+	player={x=63,y=140,hb=hb_reg}
 
 	fade_colours_mid = split"0,13, 1,5, 2,5, 3,6"
 	fade_colours = split"0,13, 1,0, 2,5, 3,6"
@@ -40,10 +42,30 @@ function init_player()
 	shot_num = 0
 	stored_count = 0
 	player_shot_pause = 0
+	burst_count = 0
+	
+	time_in_shade = 0 
+	time_in_reg = 0
+
+	max_shade_time = 180		-- max time spent in shade
+	max_shade_block = 240		-- amount of time shade is blocked for after using it
+	shade_block = 0
 end
 
 function update_player()
-	debug = stored_count
+	if target_stance==1 then 
+		player.hb = gen_hitbox(1,parse_data"-5,-5,11,11")
+		
+		time_in_shade+=1
+		time_in_reg = 0
+	else
+		player.hb = gen_hitbox(1)
+
+		time_in_shade=0
+		time_in_reg+=1
+	end
+
+	-- debug = time_in_shade .. "|" .. time_in_reg .. "\n" .. shade_block
 
 	player_movement()
 end
@@ -88,17 +110,19 @@ function draw_player()
 end
 
 function player_hurt(_source)
-
 	-- dont hurt the player if they're shaded
-	if target_stance == 1 then 
+	if target_stance == 1 or time_in_reg<10 then -- 10 frame invuln after leaving shade , feels better like this
 		-- find if the _source was a bullet
 		if _source and _source.filters then 			
-			spawn_oneshot(15,3, _source.x, _source.y)
+			spawn_oneshot(9,3, _source.x, _source.y + eqrnd"2")
 			stored_count+=1
 			del(buls,_source)
 		end
 		return
 	end
+
+	stored_count = 0
+	shade_block = 0
 
 	new_explosion(player_x,player_y,1)
 
@@ -125,7 +149,10 @@ end
 
 -- ambiguous but chain is in reference to the combo chain
 -- and combo is the actual combo number itself
-function damage_enem(hit, damage_amount, ignore_invuln)
+function damage_enem(hit, _damage_amount, ignore_invuln)
+	local damage_amount = _damage_amount * 1.5				-- small boost in damage to keep up
+	if(time_in_reg<30)damage_amount = _damage_amount * 3	-- damage boost to make the burst more damaging
+
 	if hit.t>30 then
 
 		-- intropause means you can chain the combo off the boss before it's taking damage
@@ -157,17 +184,21 @@ end
 function player_shoot()
 	if(btnp"4")player_bomb()
 	bnk_offset=tonum(bnk<-1)*-1+tonum(bnk>1)
-
 	
 	-- burst thing
-	if target_stance==0 and stored_count>0 and t%5==0 then 
-		for i=0,min(stored_count*.5,3) do 
-			local mult = .04
+	if target_stance==0 and stored_count>0 then 
+		if t%5==0 then
+			for i=0,mid(1,stored_count*.5,2) do 
+				local mult = min(.01 + (burst_count\2)*.01,.05)
 
-			new_bul(false,player_x+bnk_offset,player_y,4,.5 + i*mult)
-			if(i>0)new_bul(false,player_x+bnk_offset,player_y,4,.5 - i*mult)
+				new_bul(false,player_x+bnk_offset,player_y,5,.5 + i*mult)
+				if(i>0)new_bul(false,player_x+bnk_offset,player_y,5,.5 - i*mult)
+			end
+			burst_count +=1
+			stored_count=min(stored_count-1,10) 
 		end
-		stored_count=min(stored_count-1,5) 
+	else
+		burst_count = 0
 	end
 	
 	if(ps_volley_count<=0 or player_shot_pause>0)player_shot_pause-=1 return -- if there's no queued volley or no shot pause
@@ -185,7 +216,7 @@ function player_shoot()
 		local dir = psdir[index]
 		dir += (dir-.5) * (shot_num-1)
 
-		local bul=new_bul(false,player_x+psoff[i]+bnk_offset,player_y+psoff[i+1],3,dir)
+		local bul=new_bul(false,player_x+psoff[i]+bnk_offset,player_y+psoff[i+1],2,dir)
 	end
 
 	shot_num = (shot_num+1)%3
@@ -215,10 +246,15 @@ function player_movement()
 		ps_held_prev=0
 	end
 
+	local prev_stance = target_stance
 
 	-- define stance a or stance b
-	target_stance=ps_held_prev>15 and 1 or 0
+	target_stance=ps_held_prev>10 and 1 or 0
+	if(shade_block>0)shade_block-=1 target_stance=0		-- force regular stance if shadeblocked
 	if(disable_timer!=0)target_stance=0
+
+	if(shade_block==1)player_flash = 16
+	if(prev_stance ~= target_stance and target_stance == 0)shade_block = min(30 + time_in_shade*1.5,max_shade_block)
 
 	-- movement input
 	local mspeed,lr,ud=target_stance==1 and speedb or speeda,tonum(btn"1")-tonum(btn"0"),tonum(btn"3")-tonum(btn"2")
@@ -243,8 +279,11 @@ function player_movement()
 	if target_stance==1 then
 		-- player_immune = player_immune > 1 and player_immune or 2
 		player_shot_pause = 15
-		player_flash = 2
+		-- player_flash = 2
 		ps_volley_count=0
+
+		if(time_in_shade>max_shade_time-45)player_flash = 2
+		if(time_in_shade>max_shade_time)shade_block = max_shade_block
 		return
 	end
 

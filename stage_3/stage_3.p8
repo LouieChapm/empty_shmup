@@ -9,13 +9,13 @@ fmenu_cart_address="shmup_menu.p8"
 #include data/inf_sprites.txt
 #include data/inf_enems.txt
 
-#include src/mapfuncs.lua
-#include src/sprfuncs.lua
-#include src/bulfuncs.lua
-#include src/expfuncs.lua
+#include ../src/mapfuncs.lua
+#include ../src/sprfuncs.lua
+#include ../src/bulfuncs.lua
+#include ../src/expfuncs.lua
 
-#include base_shmup.lua
-#include type_c.lua
+#include ../src/base_shmup.lua
+#include ../src/ships/type_c.lua
 
 #include debugfuncs.lua
 
