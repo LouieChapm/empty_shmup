@@ -15,7 +15,7 @@ Changelog V2.2 "type C"
 -- updated file architecture
 
 
-Changelog V2.1 "the pre-stage 2 update"
+Changelog V2.01 "the pre-stage 2 update"
 
 -- dropped type b laser chain add when bosses are active from .2 to .1
 -- moved "coin value" to be part of enemy data , maybe saved a token

@@ -2,7 +2,7 @@ pico-8 cartridge // http://www.pico-8.com
 version 41
 __lua__
 debug=""
-version_id="V2"
+version_id="V2.02"
 
 -- convert old format memory into new format
 function move_data()
