@@ -15,7 +15,7 @@ fmenu_cart_address="shmup_menu.p8"
 #include src/expfuncs.lua
 
 #include base_shmup.lua
-#include type_a.lua
+#include type_b.lua
 
 #include debugfuncs.lua
 

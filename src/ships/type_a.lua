@@ -1,15 +1,16 @@
 
 --[[
 
- _______   _______ _____     ______ 
-|_   _\ \ / / ___ \  ___|    | ___ \
-  | |  \ V /| |_/ / |__      | |_/ /
-  | |   \ / |  __/|  __|     | ___ \
-  | |   | | | |   | |___     | |_/ /
-  \_/   \_/ \_|   \____/     \____/ 
+ _______   _______ _____       ___  
+|_   _\ \ / / ___ \  ___|     / _ \ 
+  | |  \ V /| |_/ / |__      / /_\ \
+  | |   \ / |  __/|  __|     |  _  |
+  | |   | | | |   | |___     | | | |
+  \_/   \_/ \_|   \____/     \_| |_/
+                                    
                                  
-
 ]]
+
 
 -- this should cover all of the code required for type_b
 --[[
@@ -26,17 +27,21 @@
 ]]
 
 function init_player()
-	save("speeda,speedb,psp,pr8,plm,ps_laser_dur,ps_laser_length,ps_laser_dlength,ps_laser_maxlength,olm,ps_maxvol,ps_minimum_volley_trigger,ps_volley_count","1.8,0.8,5,3,30,0,0,1.05,10,3,6,3,0")
+	save("speeda,speedb,psp,pr8,plm,olm,stance_change_treshold,opt_x,opt_y,time_in_stance_b,ps_maxvol,ps_minimum_volley_trigger,ps_volley_count,jump_frames,time_in_stance_a,player_shot_pause","1.6,1.6,5,5,30,5,10,64,164,0,6,3,0,5,0,0")
 
-	-- player shoot offset , player_shoot direction , player_shoot direction 2
-	formation_a=parse_data"-14,7|14,7"
-	psoff,psdir=unpack(parse_data"-4,-2,4,-2|.49,.51")
+	-- player shoot data
+	psoff,psdir=unpack(parse_data"-4,-2,4,-2|.5,.5")
 
-	player,player_laser_data={x=63,y=140,hb=gen_hitbox(1)},{hb=gen_hitbox(1)}
+	player,opt_burst,dash_hurt_enemies={x=63,y=140,hb=gen_hitbox(1)},{hb=gen_hitbox(1,parse_data"-10,-5,22,20")},{}
+
+	debug=""
 	
 	-- init options
-	for i=1,2 do add(options,{x=10,y=10,shot_count=0,muz=0,dir=i==1 and .475 or .525}) end
+	for i=1,3 do add(options,{x=10,y=10,shot_count=0,muz=0,dir=.5}) end
 	-- init options
+
+	pal({[0]=2,4,9,10,5,13,6,7,136,8,3,139,138,130,133,14},1)
+	poke(0x5f2e,1)
 end
 
 function update_player()
@@ -53,8 +58,6 @@ function draw_player()
 		opt_draw_above=false
 		foreach(options,drw_option)
 
-		drw_player_laser()							-- draw player laser thing
-
 		-- muzzle flash
 		if pmuz>0 then
 			pmuz-=0.5 -- "decount" muzzle flash animation
@@ -69,6 +72,8 @@ function draw_player()
 
 		sspr_obj(flr(bnk+3),player_x,player_y)		-- player sprite
 
+		draw_rotor()
+
 
 		-- draw options above
 		opt_draw_above=true
@@ -82,10 +87,11 @@ function player_hurt(_source)
 
 	-- move player to location
 	player_lerpx_1,player_lerpx_2,delx,dely=player_x,player_x,player_lerpx_1,player_lerpy_1
-	player.x,player.y=player_lerpx_1,player_lerpy_1
+	player.x,player.y,opt_x,opt_y=player_lerpx_1,player_lerpy_1,player_lerpx_1,player_lerpy_1
 	
 	save("player_lerp_perc,player_lerp_delay,player_immune,player_flash,combo_num,combo_counter,ps_laser_length,live_preview_offset,live_flash,bombs,max_rank,draw_particles_above","0,30,180,180,0,0,0,1,30,1,600,30")
 	lives-=1
+	
 
 	new_bulcancel(30, 75)
 	
@@ -98,20 +104,18 @@ function player_hurt(_source)
 	sfx(55,2)
 end
 
-
 ----------=================  GENERIC BUT REQUIRED  =================----------
+
 
 -- ambiguous but chain is in reference to the combo chain
 -- and combo is the actual combo number itself
 function damage_enem(hit, damage_amount, ignore_invuln)
-	if hit.t>30 then
+	if hit.t>30 or ignore_invuln then
 
 		-- intropause means you can chain the combo off the boss before it's taking damage
-		combo_num+=target_stance==1 and (boss_active and .1 or .2) or .1  --~~ roughly the same
+		combo_num+=target_stance==1 and .06 or .08  --~~ roughly the same
 
 		if(hit.intropause<=0)hit.health-=damage_amount
-	elseif ignore_invuln then
-		hit.health-=damage_amount
 	end
 
 	-- flash enemy
@@ -136,35 +140,27 @@ end
 
 function player_shoot()
 	if(btnp"4")player_bomb()
+
+	player_shot_pause-=1
 	
-	if(ps_volley_count<=0)return -- if there's no queued volley
+	if(ps_volley_count<=0 or player_shot_pause>0)return -- if there's no queued volley
 	if(plast>0 or #puls>plm)plast-=1 return -- don't shoot if the timer isn't zero or if above shot limit
+	
+	foreach(options,opt_shoot)
 
 	-- SHOT FIRED --
-
-	if target_stance==1 then
-		player_laser()
-		return
-	end
-	
-	-- reset laser if you're not shooting it maeght
-	if(ps_laser_length!=0)ps_volley_count,ps_laser_length=0,0 return
-
-
 	ps_volley_count-=1
-	foreach(options,opt_shoot)
 
 
 	pmuz=4
 	bnk_offset=tonum(bnk<-1)*-1+tonum(bnk>1)
 
-
 	for i=1,#psoff,2 do
 		local index=ceil(i*.5)
-		local bul=new_bul(false,player_x+psoff[i]+bnk_offset,player_y+psoff[i+1],3,psdir[index])
+		new_bul(false,player_x+psoff[i]+bnk_offset,player_y+psoff[i+1],3,psdir[index])
 	end
 
-	plast=pr8 -- set last shot to shot rate
+	plast=target_stance==1 and not boss_active and 3 or pr8 -- set last shot to shot rate
 	sfx(62,2)
 end
 
@@ -177,19 +173,58 @@ function drw_option(opt)
 end
 
 function upd_options()
+
 	-- options perc
-	op_perc=lerp(op_perc,target_stance,0.1)
+	op_perc=lerp(op_perc,target_stance,target_stance==1 and .3 or .07)
+	
+	opt_burst.x,opt_burst.y=opt_x,lerp(player_y,opt_y,op_perc)-20
+
+	if target_stance==1 then 
+		if(time_in_stance_b==0)dash_hurt_enemies={}
+		time_in_stance_b+=1  
+
+		opt_y-=lerp(25,.05,easeoutquad(min(time_in_stance_b,jump_frames)/jump_frames))
+
+		if time_in_stance_b<30 then
+			for enem in all(enem_col(opt_burst)) do 
+				
+				for prev_enem in all(dash_hurt_enemies) do 
+					if(prev_enem==enem)goto continue
+				end
+
+				sfx"54"
+
+				damage_enem(enem,35,true)
+				if(enem.dead and enem.active)combo_num+=10
+
+				add(dash_hurt_enemies,enem)
+
+				::continue::
+			end
+		end
+	else 
+		time_in_stance_b=0
+	end
+
+	-- particles
+	if time_in_stance_b%2!=0 and time_in_stance_b<8 then 
+		local part=new_basepart(opt_burst.x+1,opt_burst.y,0,-.8-time_in_stance_b*.05,p_wave,10)
+		part.rad,part.torad,part.toradspd=1,20-time_in_stance_b,0.25
+	end
 
 	for i,opt in inext,options do
-		local ox1,oy1=unpack(formation_a[i])
-		local ox2,oy2=rot_opt(opt,(1/#options)*i,8,4,-8,0.01)
+		local ox1,oy1=rot_opt(opt,(1/#options)*i,10,6,0,0.01)
+		local ox2,oy2=rot_opt(opt,(1/#options)*i,6,6,-8,0.03)
+		ox2+=opt_x - player_x
+		oy2+=opt_y - player_y
+
 		opt.x,opt.y=lerp(ox1,ox2-delx+player_x,op_perc)+delx,lerp(oy1,oy2-dely+player_y,op_perc)+dely
 	end
 end
 
 function opt_shoot(_option)
 	if(_option.shot_count>olm)return
-	new_bul(_option,_option.x,_option.y-5,4,_option.dir)
+	local bul=new_bul(_option,_option.x,_option.y-5,4,_option.dir)
 
 	_option.shot_count+=1
 	_option.muz=2
@@ -197,32 +232,24 @@ end
 
 function rot_opt(_opt,_rad,_width,_height,_oy,_speed)
 	local pos=(_rad+t*_speed)%1
-	_opt.above=pos<=0.5
+	_opt.above=target_stance==0 and pos<.5 or false --  or 
 	return cos(pos)*_width,sin(pos)*_height+_oy
 end
 
-
-function drw_player_laser()
-	-- width
-	if(ps_laser_length<=0)return
-
-	local sy=player_laser_data.y
-	for data in all(parse_data"5,1|4,2|3,3|1,7") do
-		local width,col=unpack(data)
-		if(width<=2 and t%6<3)width+=1
-		rectfill(player_x-width,sy-1,player_x+width+1,ps_laser_hit_height, col)
-	end
-
-	sspr_obj(22,player_x,player_y-11)
-	
-	circfill(player_x+t%2,player_y-9,3+(t\6)%3,7)
-end
-
-
 ----------=================  TYPE B FUNCTIONS  =================----------
 
+function draw_rotor()
+	local t=t\4
+	if t%3<2 then 
+		oval(player_x-7,player_y-6,player_x+8,player_y+7,7)
+
+		local start=93+tonum(t%3<1)
+		sspr_obj(start,player_x-5,player_y-5)
+		sspr_obj(start+2,player_x+1,player_y+1)
+	end
+end
+
 function player_movement()
-	-- if(not player_active)return
 	input_disabled=disable_timer!=0
 
 	inbtn=btn()&15
@@ -240,10 +267,11 @@ function player_movement()
 		ps_held_prev=0
 	end
 
-
+	local prev_stance=target_stance
 	-- define stance a or stance b
-	target_stance=ps_held_prev>15 and 1 or 0
-	if(ps_held_prev==15)sfx(59,3)
+	if op_perc<.05 or ps_held_prev<=stance_change_treshold then
+		target_stance=prev_stance==1 and time_in_stance_b<90 and 1 or ps_held_prev>stance_change_treshold and 1 or 0
+	end
 	if(disable_timer!=0)target_stance=0
 	
 	-- movement input
@@ -255,7 +283,7 @@ function player_movement()
 
 	if input_disabled or player_lerp_perc>=0 then
 		if(disable_timer>0)disable_timer-=1
-		bnk=0
+		bnk,target_stance=0,0
 	else
 		--normalized movement
 		local nrm=lr!=0 and ud!=0 and 0.717 or 1
@@ -264,51 +292,13 @@ function player_movement()
 		-- add data back to table for niceties
 		player.x,player.y=player_x,player_y
 
+		if(prev_stance!=target_stance and target_stance==1)opt_x,opt_y,player_shot_pause=delx,dely,25
 	end
 
 	-- delayed x/y
-	delx,dely=lerp(delx,player_x,0.2),lerp(dely,player_y,0.2) -- tokens
+	delx,dely=lerp(delx,player_x,0.3),lerp(dely,player_y,0.3) -- tokens
 
 	for enem in all(enems) do
 		if(not enem.disabled and enem.t>60 and player_col(enem))player_hurt()
 	end
-end
-
-
-
-function player_laser()
-	-- find max height
-	ps_laser_length=min(5+ps_laser_length*ps_laser_dlength,128)
-
-	player_laser_data.hb,player_laser_data.x,player_laser_data.y={ox=-10,oy=-ps_laser_length,w=22,h=ps_laser_length},player_x,player_y-10
-
-	-- find all enemies that *could* be hit by the laser
-	-- find which one of those enemies is the lowest
-	local lowest,lowest_enem=-50,nil
-	for enem in all(enem_col(player_laser_data)) do 
-		if(enem.y>lowest)lowest,lowest_enem=enem.y,enem
-	end
-
-	-- update the laser hitbox to match the lowest enemy
-	if lowest_enem then
-		ps_laser_length = player_y - lowest_enem.y
-		player_laser_data.hb.oy,player_laser_data.hb.h=-ps_laser_length,ps_laser_length
-		
-		
-	end
-	ps_laser_hit_height=lowest_enem and lowest_enem.y + lowest_enem.hb.oy + lowest_enem.hb.h or player_y - ps_laser_length
-
-	-- PERFORMANCE
-	-- THIS IS TERRIBLE
-	-- I"M LOOPING OVER EVERY ENEMY INSTEAD OF THE SMALLER LIST I ALREADY HAVE
-	-- PICO FORCED MY HAND , IM DOING THIS FOR TOKENS AND TOKENS ALONE
-	for enem in all(enem_col(player_laser_data)) do
-		damage_enem(enem, enem.elite and 1 or 1.6)
-		add_ccounter(2,25)
-	end
-
-	if(t%4==0)new_debris(player_x,player_y-10,.5,5,-7)sfx(60,2)
-	
-
-	if(ps_laser_hit_height>-5)spawn_oneshot(8,3,player_x+eqrnd"5",ps_laser_hit_height+eqrnd"2")
 end

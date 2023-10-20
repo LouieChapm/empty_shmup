@@ -4,9 +4,15 @@ SHRINKO8 --minify --minify-safe-only
 
 Change Type B laser combo add on frame to add slightly less when facing bosses . A number might need to be found- but .2 is just way too high on bosses , but feels good on everything else
 
-Combo number colours are wrong from 750 to 1k
+Combo number colours are wrong from 750 to 1k , 
+	also isn't green broken ?
 
 
+Changelog V2.2 "type C"
+
+-- added temp type_c
+	-- subject to change
+-- updated file architecture
 
 
 Changelog V2.1 "the pre-stage 2 update"
