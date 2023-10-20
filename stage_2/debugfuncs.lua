@@ -1,5 +1,6 @@
 
 debug,debug_time="",0
+draw_hitboxes=false
 poke(0x5f2e,1) -- keeps the colours on quit
 
 
@@ -11,7 +12,7 @@ function debug_hitboxes()
 	if(t\4%2==0)draw_hitbox(player_x, player_y, player.hb, plcol)
 
 	for enem in all(enems) do
-		draw_hitbox(enem.x,enem.y,enem.hb,encol)
+		draw_hitbox(enem.x,enem.y,enem.hb,enem.inactive and 5 or encol)
 	end
 
 	for bul in all(buls) do

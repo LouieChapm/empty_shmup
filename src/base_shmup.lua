@@ -16,7 +16,7 @@ function init_baseshmup(_enemy_data)
 
 	save("score,lives,live_preview_offset,live_flash,bombs,bomb_preview_offset,bomb_flash,pmuz,pause_combo,combo_num,combo_counter,combo_freeze,disable_timer,player_immune,player_flash,ps_held_prev,screen_flash,bnk,bnkspd,plast,op_perc","0,2,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0.3,0,1")
 
-	enems,puls,options,opuls,hitregs,pickups,turret_sprites,hitboxes={},{},{},{},{},{},split"37,38,39,40,41",parse_data"0,0,2,2|-3,-8,8,8|-9,-7,20,8|-3,-4,8,8|-4,-5,9,13|-5,-5,11,13|-13,-8,27,16|-15,-15,31,30|-9,-15,18,15|-32,-18,66,15"
+	enems,puls,options,opuls,hitregs,pickups,turret_sprites={},{},{},{},{},{},split"37,38,39,40,41"
 	enemy_data=parse_data(_enemy_data,"\n")
 
 	-- ?"\^!5f10249:5=67☉83⬅️⌂🐱ˇ>"
@@ -137,7 +137,7 @@ function check_bulcol(_bullet)
 end
 
 function player_col(item) -- tokens maybe ?
-	if(player_immune>0)return false
+	if(player_immune>0 or item.inactive)return false
 	return col(item,player)
 end
 
@@ -274,41 +274,6 @@ function enem_sub_health(_enemy)
 	end
 	
 end
-
-function upd_enem(_enemy)
-	-- health stuff
-	-- kill enemy on zero health
-	-- todo completely move this to it's own "damage_enemies()" function
-		
-	if _enemy.health<=0 then
-		enem_sub_health(_enemy)
-		return
-	end
-
-	_enemy.t+=1
-
-	if(_enemy.lerpperc>=0)upd_lerp(_enemy)
-	if(_enemy.brain)upd_brain(_enemy,_enemy.brain)
-	if _enemy.intropause<=0 then
-		foreach(_enemy.turrets,upd_turret)
-	else 
-		_enemy.intropause-=1
-	end
-	if(_enemy.path)follow_path(_enemy)
-
-	_enemy.x,_enemy.y=_enemy.ox+_enemy.sx,_enemy.oy+_enemy.sy
-
-	for anchor in all(_enemy.anchors) do 	-- add all of these guys to a list , so that you can draw them last
-		add(anchors,anchor)
-		anchor.sx,anchor.sy=_enemy.x,_enemy.y
-	end
-
-	-- controls the hit-flash
-	_enemy.flash-=1 
-	
-	if(_enemy.path and player_lerp_delay<=0)enem_path_shoot(_enemy)
-end
-
 
 
 -- start x/y 

@@ -291,6 +291,7 @@ function player_movement()
 	-- delayed x/y
 	delx,dely=lerp(delx,player_x,0.2),lerp(dely,player_y,0.2) -- tokens
 
+	-- enemy collisions
 	for enem in all(enems) do
 		if(not enem.disabled and enem.t>60 and player_col(enem))player_hurt()
 	end

@@ -1,12 +1,13 @@
 pico-8 cartridge // http://www.pico-8.com
 version 41
 __lua__
+#include ../../src/base_shmup.lua
+#include ../debugfuncs.lua
+
 #include ../../src/bulfuncs.lua
 #include ../../src/sprfuncs.lua
-#include ../../src/mapfuncs.lua
-#include ../../src/base_shmup.lua
+#include ../mapfuncs_s2.lua
 
-#include ../debugfuncs.lua
 
 #include inf_crumbs.txt
 #include inf_patterns.txt
@@ -15,14 +16,15 @@ __lua__
 #include inf_enems.txt
 
 
--- COPIED FROM stage_2b.p8
-function spawn_enem(_path, _type, _spawn_x, _spawn_y, _ox, _oy)
-	if(enemy_data[_type]==nil)debug = "enemy ["..tostr(_type).."] does not exist" debug_time=240 return
+--8151
+function spawn_enem(_path, _type, _spawn_x, _spawn_y, _ox, _oy, _ground_data)
 
 	local enemy=setmetatable({},{__index=_ENV})
 	local _ENV=enemy
 	s,health,hb,deathmode,sui_shot,value,elite,exp,coin_value=unpack(enemy_data[_type])
-	hb,elite,active,type,sx,sy,ox,oy,x,y,t,shot_index,perc,flash,path_index,pathx,pathy,anchors,patterns,turrets,lerpperc,intropause=gen_hitbox(hb),elite==1,true,_type,_spawn_x,_spawn_y,_ox or 0, _oy or 0,63,-18,0,1,0,0,_path,{},{},{},{},{},-1,0
+	elite,active,type,sx,sy,ox,oy,x,y,t,shot_index,perc,flash,path_index,pathx,pathy,anchors,patterns,turrets,lerpperc,intropause,ground_data=elite==1,true,_type,_spawn_x,_spawn_y,_ox or 0, _oy or 0,63,-18,0,1,0,0,_path,{},{},{},{},{},-1,0,_ground_data
+
+	inactive = ground_data and true or false
 
 	if(_path)depth,path=gen_path(crumb_lib[_path])
 
@@ -31,6 +33,7 @@ function spawn_enem(_path, _type, _spawn_x, _spawn_y, _ox, _oy)
 
 	return add(enems,_ENV)
 end
+
 
 
 sidebar_scale=0.1
@@ -64,7 +67,7 @@ function _init()
 
 	menuitem(1, "export data", function() export_data() end)
 
-	default_new=split"60,1,2,63,63,,324"
+	default_new=split"60,1,2,63,63,-,-"
 
 
 	-- camera scroll background thing
@@ -177,7 +180,11 @@ function update_input()
 		
 		if char=="\r" then
 			poke(0x5f30,1)
-			new_info[new_sel_index]=new_sel_index<=5 and tonum(temp_text) or temp_text
+
+			local text = new_sel_index<=5 and tonum(temp_text) or temp_text
+			if(#tostr(text)==0)text = "-"
+
+			new_info[new_sel_index]=text
 			temp_text=t
 			is_typing=false
 			return
@@ -243,6 +250,11 @@ function update_input()
 
 			is_typing=true
 			temp_text=""
+		end
+
+		-- remove data
+		if char == "\b" then 
+			new_info[new_sel_index]="-"
 		end
 	end
 end

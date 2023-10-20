@@ -194,7 +194,13 @@ function update_enem()
 	enem.x+=dx*speed_offset
 	enem.y+=dy*speed_offset
 	
-	if(enem.y>160 or enem.y<-42 or enem.x<-40 or enem.x>160 or new_reset)new_reset = false reset_vehicle()
+	local current_action = cur_data[3][enem.step-1] and cur_data[3][enem.step-1][1]
+	debug = current_action=="wait" and enem.wait_time
+	if current_action=="wait" and enem.wait_time>0 then
+		--
+	else
+		if(enem.y>160 or enem.y<-42 or enem.x<-40 or enem.x>160 or new_reset)new_reset = false reset_vehicle()
+	end
 end
 
 
