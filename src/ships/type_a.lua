@@ -27,6 +27,8 @@
 ]]
 
 function init_player()
+	type = "a"
+
 	save("speeda,speedb,psp,pr8,plm,olm,stance_change_treshold,opt_x,opt_y,time_in_stance_b,ps_maxvol,ps_minimum_volley_trigger,ps_volley_count,jump_frames,time_in_stance_a,player_shot_pause","1.6,1.6,5,5,30,5,10,64,164,0,6,3,0,5,0,0")
 
 	-- player shoot data

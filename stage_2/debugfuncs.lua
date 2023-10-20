@@ -19,12 +19,16 @@ function debug_hitboxes()
 	end
 
 
-	if target_stance==1 then 
-		draw_hitbox(player_x, player_y-10, player_laser_data.hb, pulcol)
+	if type == "b" then
+		if target_stance==1 then 
+			draw_hitbox(player_x, player_y-10, player_laser_data.hb, pulcol)
+		end
 	end
 
-	if time_in_stance_b>0 and time_in_stance_b < 30 then
-		rect(opt_x-8,lerp(player_y,opt_y,op_perc),opt_x+9,player_y,3)
+	if type == "a" then
+		if time_in_stance_b>0 and time_in_stance_b < 30 then
+			rect(opt_x-8,lerp(player_y,opt_y,op_perc),opt_x+9,player_y,3)
+		end
 	end
 
 	for pul in all(puls) do
@@ -35,7 +39,7 @@ function debug_hitboxes()
 		draw_hitbox(opul.x,opul.y,opul.hb,pulcol)
 	end
 
-	draw_hitbox(opt_burst.x,opt_burst.y,opt_burst.hb,13)
+	if(type == "a")draw_hitbox(opt_burst.x,opt_burst.y,opt_burst.hb,13)
 end
 
 function draw_hitbox(_x,_y,hb,_c)

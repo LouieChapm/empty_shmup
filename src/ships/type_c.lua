@@ -27,12 +27,12 @@
 ]]
 
 function init_player()
+	type = "c"
+
 	save("speeda,speedb,psp,pr8,plm,olm,ps_maxvol,ps_minimum_volley_trigger,ps_volley_count","2.2,1.2,5,2,30,3,6,3,0")
 
 	-- player shoot offset , player_shoot direction , player_shoot direction 2
 	psoff,psdir=unpack(parse_data"0,-3,-4,-1,5,-1|.5,.49,.51")
-
-	local hb_reg,hb_larger = gen_hitbox(1),gen_hitbox(1,parse_data"-5,-5,11,11")
 
 	player={x=63,y=140,hb=hb_reg}
 
@@ -54,7 +54,7 @@ end
 
 function update_player()
 	if target_stance==1 then 
-		player.hb = gen_hitbox(1,parse_data"-5,-5,11,11")
+		player.hb = gen_hitbox(1,parse_data"-5,-5,12,11")
 		
 		time_in_shade+=1
 		time_in_reg = 0
@@ -191,8 +191,8 @@ function player_shoot()
 			for i=0,mid(1,stored_count*.5,2) do 
 				local mult = min(.01 + (burst_count\2)*.01,.05)
 
-				new_bul(false,player_x+bnk_offset,player_y,5,.5 + i*mult)
-				if(i>0)new_bul(false,player_x+bnk_offset,player_y,5,.5 - i*mult)
+				new_bul(false,player_x+bnk_offset,player_y,4,.5 + i*mult)
+				if(i>0)new_bul(false,player_x+bnk_offset,player_y,4,.5 - i*mult)
 			end
 			burst_count +=1
 			stored_count=min(stored_count-1,10) 
@@ -216,7 +216,7 @@ function player_shoot()
 		local dir = psdir[index]
 		dir += (dir-.5) * (shot_num-1)
 
-		local bul=new_bul(false,player_x+psoff[i]+bnk_offset,player_y+psoff[i+1],2,dir)
+		local bul=new_bul(false,player_x+psoff[i]+bnk_offset,player_y+psoff[i+1],3,dir)
 	end
 
 	shot_num = (shot_num+1)%3

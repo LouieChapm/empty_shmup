@@ -26,6 +26,8 @@
 ]]
 
 function init_player()
+	type = "b"
+
 	save("speeda,speedb,psp,pr8,plm,ps_laser_dur,ps_laser_length,ps_laser_dlength,ps_laser_maxlength,olm,ps_maxvol,ps_minimum_volley_trigger,ps_volley_count","1.8,0.8,5,3,30,0,0,1.05,10,3,6,3,0")
 
 	-- player shoot offset , player_shoot direction , player_shoot direction 2
