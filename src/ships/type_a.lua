@@ -168,10 +168,14 @@ end
 
 
 function drw_option(opt)
+	if(target_stance==1 and time_in_stance_b<8)allpal(7)
+
 	if opt.above==opt_draw_above then
 		if(opt.muz>0)sspr_obj(split"19,20"[2-opt.muz\1],opt.x,opt.y-5)opt.muz-=0.5
 		sspr_anim(2,opt.x,opt.y)
 	end
+
+	allpal()
 end
 
 function upd_options()
@@ -182,10 +186,18 @@ function upd_options()
 	opt_burst.x,opt_burst.y=opt_x,lerp(player_y,opt_y,op_perc)-20
 
 	if target_stance==1 then 
-		if(time_in_stance_b==0)dash_hurt_enemies={}
+		if time_in_stance_b==0 then 
+			dash_hurt_enemies={}
+			
+			local part=new_basepart(player_x,player_y,0,8,p_grape,1)
+			part.rad=20
+		end
+
+		if(time_in_stance_b<6 and time_in_stance_b%2==0)pnew_circ(opt_burst.x,opt_burst.y+4, 0, 10, 0)
 		time_in_stance_b+=1  
 
 		opt_y-=lerp(25,.05,easeoutquad(min(time_in_stance_b,jump_frames)/jump_frames))
+
 
 		if time_in_stance_b<30 then
 			for enem in all(enem_col(opt_burst)) do 
