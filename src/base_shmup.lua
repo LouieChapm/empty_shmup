@@ -578,7 +578,7 @@ function draw_ui()
 			local sx,sy=tonum(str_combo[i])*8,115
 			sspr(sx,sy,8,13,_x+i*9-3,_y)
 		end
-		sspr(110,53,16,10,#str_combo*9+_x+6,_y)
+		sspr(80,118,16,10,#str_combo*9+_x+6,_y)
 
 		palt(11,false)
 		pal(13,13)

@@ -1,0 +1,1 @@
+editor_path_library=[[80,1,1,0.75|20,68,-16|init,1,3]]

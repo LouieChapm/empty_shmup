@@ -59,8 +59,10 @@ function update_player()
 		time_in_shade+=1
 		time_in_reg = 0
 
-		add_ccounter(1,30)
+		add_ccounter(.5)			-- slows down combo loss when in shade
 		-- if(t%2==0)combo_freeze = 1
+
+		shot_num = 0
 	else
 		player.hb = gen_hitbox(1)
 
@@ -122,8 +124,7 @@ function player_hurt(_source)
 			spawn_oneshot(9,3, _source.x, _source.y + eqrnd"2")
 			stored_count+=1
 
-			combo_num += 5
-			add_ccounter(10)
+			combo_num += 3
 
 			del(buls,_source)
 		end
@@ -201,6 +202,8 @@ function player_shoot()
 		if t%5==0 then
 			for i=0,mid(1,stored_count*.5,2) do 
 				local mult = min(.01 + (burst_count\2)*.01,.05)
+
+				sfx(54,2)
 
 				new_bul(false,player_x+bnk_offset,player_y,4,.5 + i*mult)
 				if(i>0)new_bul(false,player_x+bnk_offset,player_y,4,.5 - i*mult)
