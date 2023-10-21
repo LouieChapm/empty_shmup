@@ -33,10 +33,10 @@ helpers={split"none",split"spd mult,anim index,anim spd,filter ref",split"refere
 #include inf_sprites.txt
 #include inf_enems.txt
 
-#include ../src/bulfuncs.lua
-#include ../src/sprfuncs.lua
+#include ../../src/base_shmup.lua
+#include ../../src/bulfuncs.lua
+#include ../../src/sprfuncs.lua
 
-#include ../base_shmup.lua
 #include ../debugfuncs.lua
 
 

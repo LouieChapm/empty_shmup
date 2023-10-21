@@ -29,15 +29,15 @@
 function init_player()
 	type = "c"
 
-	save("speeda,speedb,psp,pr8,plm,olm,ps_maxvol,ps_minimum_volley_trigger,ps_volley_count","2.2,1.2,5,2,30,3,6,3,0")
+	save("speeda,speedb,psp,pr8,plm,olm,ps_maxvol,ps_minimum_volley_trigger,ps_volley_count","2.2,1.5,5,2,30,3,6,3,0")
 
 	-- player shoot offset , player_shoot direction , player_shoot direction 2
 	psoff,psdir=unpack(parse_data"0,-3,-4,-1,5,-1|.5,.49,.51")
 
 	player={x=63,y=140,hb=hb_reg}
 
-	fade_colours_mid = split"0,13, 1,5, 2,5, 3,6"
-	fade_colours = split"0,13, 1,0, 2,5, 3,6"
+	fade_colours_mid = split"14,13, 4,14, 5,5, 6,6, 7,6"
+	fade_colours = split"14,13, 4,14, 5,4, 6,5, 7,6"
 
 	shot_num = 0
 	stored_count = 0
@@ -58,6 +58,9 @@ function update_player()
 		
 		time_in_shade+=1
 		time_in_reg = 0
+
+		add_ccounter(1,30)
+		-- if(t%2==0)combo_freeze = 1
 	else
 		player.hb = gen_hitbox(1)
 
@@ -89,7 +92,7 @@ function draw_player()
 		end							
 
 		-- define fade colours
-		local colours = ps_held_prev<20 and fade_colours_mid or fade_colours
+		local colours = ps_held_prev<15 and fade_colours_mid or fade_colours
 
 		if target_stance==1 then 
 			for i=1,#colours,2 do 
@@ -105,6 +108,8 @@ function draw_player()
 			end
 		end
 
+		rectfill(player_x,player_y,player_x+1,player_y+1,7)
+
 	end
 	player_flash=max(0,player_flash-1)
 end
@@ -116,6 +121,10 @@ function player_hurt(_source)
 		if _source and _source.filters then 			
 			spawn_oneshot(9,3, _source.x, _source.y + eqrnd"2")
 			stored_count+=1
+
+			combo_num += 5
+			add_ccounter(10)
+
 			del(buls,_source)
 		end
 		return
@@ -151,9 +160,11 @@ end
 -- and combo is the actual combo number itself
 function damage_enem(hit, _damage_amount, ignore_invuln)
 	local damage_amount = _damage_amount * 1.5				-- small boost in damage to keep up
-	if(time_in_reg<30)damage_amount = _damage_amount * 3	-- damage boost to make the burst more damaging
+	if(time_in_reg<30)damage_amount = _damage_amount * 4	-- damage boost to make the burst more damaging
 
 	if hit.t>30 then
+		combo_num += .15
+		add_ccounter"1"
 
 		-- intropause means you can chain the combo off the boss before it's taking damage
 		if(hit.intropause<=0)hit.health-=damage_amount
@@ -250,10 +261,12 @@ function player_movement()
 
 	-- define stance a or stance b
 	target_stance=ps_held_prev>10 and 1 or 0
+	
 	if(shade_block>0)shade_block-=1 target_stance=0		-- force regular stance if shadeblocked
+	if(flr(shade_block)==1)player_flash = 16
+
 	if(disable_timer!=0)target_stance=0
 
-	if(shade_block==1)player_flash = 16
 	if(prev_stance ~= target_stance and target_stance == 0)shade_block = min(30 + time_in_shade*1.5,max_shade_block)
 
 	-- movement input

@@ -538,3 +538,112 @@ function upd_combo()
 		end
 	end
 end
+
+-- drawing reorganisation
+function draw_ui()
+	-- boss health bar
+	if boss_active and boss.health>0 then 
+		local x_position=cam_x+3
+		rectfill(x_position,3,x_position+121*(boss.health/boss_maxhealth),4,7)
+	end
+
+	local ox,oy,str_combo=3+cam_x,3,tostr(combo_num\1)
+	if(boss_active)oy+=6	
+	if(combo_num==0)score_in_combo=0
+
+	highest_combo=tostr(max(highest_combo,str_combo))
+
+	--local score_text=t%720<180 and score_in_combo>5000 and "+"..tostr(score_in_combo,0x2).."0" or t%720>540 and "max  "..highest_combo.."HIT" or tostr(score,0x2).."0" 
+
+	local is_highscore_text=t%720>480 and not boss_active
+	local score_text=is_highscore_text and "HIGH "..highscore or tostr(score,0x2).."0" 
+
+	?score_text,ox+125-#score_text*4,oy-1,global_flash and 13 or 0
+	?score_text,ox+125-#score_text*4,oy-2,is_highscore_text and 6 or 7
+
+	if combo_num>50 and t%5<4 then 
+		local _x,_y=ox,oy+17
+		if(boss_active)_x,_y=40+cam_x,7
+
+		palt(11,true)
+
+		for i=0,2 do 
+			pal(i,combo_colours[i+1 + min(combo_num\250,4)*3])
+		end
+
+		-- parse_data"89,39|78,52|86,52|94,52|102,50|115,73|57,39|65,39|73,39|81,39"
+
+		if(combo_on_frame>0)pal(13,5)
+		for i=1,#str_combo do 
+			local sx,sy=tonum(str_combo[i])*8,115
+			sspr(sx,sy,8,13,_x+i*9-3,_y)
+		end
+		sspr(110,53,16,10,#str_combo*9+_x+6,_y)
+
+		palt(11,false)
+		pal(13,13)
+		
+		allpal()
+	end
+
+	local clamped_counter,text,combo_text=min(combo_counter,100),"\f2"..str_combo.."HIT","+"..tostr(score_in_combo,0x2).."0"
+
+
+	if(boss_active)goto skip_ui
+
+	oy+=15
+	ox-=1
+	rectfill(ox,oy - clamped_counter/5.9,3+ox,oy,meter_colours[1+clamped_counter\10])
+
+	sspr_obj(61,cam_x-1,-1)
+
+	-- ?"_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\n_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\n_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\f4\|5\r_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\n_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\n_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_\-d_",cam_x+7,-3,5
+
+	?"⁶x3_____________\n_____________\n_____________\f4\|5\r_____________\n_____________\n_____________",cam_x+7,-3,5
+	sspr_obj(62,cam_x-5,-1)
+
+
+	rect(ox+4,14,ox+15,17,4)
+	rect(ox+4,14,ox+15,16,5)
+
+
+
+	if t%500<150 then 
+		?"MAX",ox+6,2,7
+		text=highest_combo.."\f7HIT"
+	end
+
+	?text,ox+51-#text*4,2,3
+
+	?combo_text,ox+43-#combo_text*4,8,7
+
+	?"|\n\|f|\n\|f|",ox+3,1,5
+
+	::skip_ui::
+
+	-- bomb UI
+	local num=bombs+bomb_preview_offset
+	for i=1,num do
+		if bomb_flash>0 and i==num then 
+			bomb_flash-=1
+			if(bomb_flash==0)bomb_preview_offset=0
+			if(global_flash)goto fuck_tokens
+		end
+		sspr_obj(60,ox+9*i-6,122)
+	end
+	::fuck_tokens::
+
+	-- lives UI
+	ox+=128
+	local num=lives+live_preview_offset
+	for i=1,num do
+		if live_flash>0 and i==num then 
+			live_flash-=1
+			if(live_flash==0)live_preview_offset=0
+			if(global_flash)goto skip_this_bullshit
+		end
+		sspr_obj(21,ox-9*i,122)
+	end
+	::skip_this_bullshit::
+
+end

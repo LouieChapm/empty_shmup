@@ -209,7 +209,7 @@ function drw_player_laser()
 	if(ps_laser_length<=0)return
 
 	local sy=player_laser_data.y
-	for data in all(parse_data"5,1|4,2|3,3|1,7") do
+	for data in all(parse_data"5,4|4,5|3,6|1,7") do --5,1|4,2|3,3|1,7") do
 		local width,col=unpack(data)
 		if(width<=2 and t%6<3)width+=1
 		rectfill(player_x-width,sy-1,player_x+width+1,ps_laser_hit_height, col)

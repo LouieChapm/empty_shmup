@@ -69,6 +69,8 @@ ground_data=parse_data"108,30,20,2,-16,-5"
 function drw_ground(_ground)
 	local sx,sy,sw,sh,dx,oy = unpack(ground_data[_ground[1]])
 	map(sx,sy,dx,flr(_ground[3] + oy),sw,sh)
+
+	if(_ground[3] > 160)del(grounds,_ground)		-- delete the object if it goes off screen
 end
 
 function check_spawn(_spawn)

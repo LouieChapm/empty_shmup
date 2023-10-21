@@ -70,6 +70,7 @@ function reset_data()
 		0.1021,
 		del(name_list,rnd(name_list)),
 	}
+
 	--[[
 	local default_data={
 		0.5238,
@@ -118,7 +119,7 @@ function _init()
 	cartdata"kalika_v1_01"
 	local menu_start_screen="ramcheck"
 	if(dget(0)==0)reset_data()
-	-- reset_data()
+	reset_data()
 	if(dget(21)==0)move_data()
 
 	is_duplicate_load=dget(63)==1
@@ -245,7 +246,7 @@ function submit_data(_pos)
 	
 	local clamped_score=min(prevrun_maxhit,999)
 	local save_score=sub("000"..clamped_score,-3)
-	dset(score_memory_locations[_pos]+2,tonum(prevrun_type..save_score))
+	dset(score_memory_locations[_pos]+2,tonum(stage..prevrun_type..save_score))
 
 	highest_score=tostr(dget(0),0x2).."0"
 
@@ -406,7 +407,7 @@ end
 function mem_2_string(_binary)
 	-- five bytes each which is a max of 31
 	-- 00000 00001 00010 = cba
-	-- oh yeah its also backwards
+	-- oh yeah its also backwards ?? maybe not anymore
 	-- alphabet (26) + , . - 
 	local z=_binary&31
 	local y=(_binary>>5)&31
