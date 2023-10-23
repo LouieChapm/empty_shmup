@@ -121,7 +121,7 @@ function player_hurt(_source)
 	if target_stance == 1 or time_in_reg<10 then -- 10 frame invuln after leaving shade , feels better like this
 		-- find if the _source was a bullet
 		if _source and _source.filters then 			
-			spawn_oneshot(9,3, _source.x, _source.y + eqrnd"2")
+			spawn_oneshot(15,3, _source.x, _source.y + eqrnd"2")
 			stored_count+=1
 
 			combo_num += 3
