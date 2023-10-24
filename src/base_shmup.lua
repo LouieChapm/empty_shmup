@@ -504,7 +504,7 @@ function upd_bulcancel()
 	for bul in all(buls) do
 		if bul.y>current_perc then
 			if(spawn_pickups)spawn_pickup(bul.x,bul.y)
-			spawn_oneshot(9,5,bul.x,bul.y)
+			spawn_oneshot(15,5,bul.x,bul.y)
 			del(buls,bul)
 		end
 	end

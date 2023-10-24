@@ -306,7 +306,7 @@ function player_movement()
 		-- add data back to table for niceties
 		player.x,player.y=player_x,player_y
 
-		if(prev_stance!=target_stance and target_stance==1)opt_x,opt_y,player_shot_pause=delx,dely,25
+		if(prev_stance!=target_stance and target_stance==1)opt_x,opt_y,player_shot_pause,draw_particles_above=delx,dely,30,30
 	end
 
 	-- delayed x/y
