@@ -658,5 +658,5 @@ function return_to_menu()
 
 	dset(59,1)	-- tell the game that you died :(
 
-	load("../menu/kalikan_menu.p8")
+	load"../menu/kalikan_menu.p8"
 end
