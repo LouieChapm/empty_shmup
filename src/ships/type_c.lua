@@ -54,7 +54,7 @@ end
 
 function update_player()
 	if target_stance==1 then 
-		player.hb = gen_hitbox(1,parse_data"-5,-5,12,11")
+		player.hb = gen_hitbox(1,parse_data"-5,-5,12,16")
 		
 		time_in_shade+=1
 		time_in_reg = 0
@@ -176,7 +176,7 @@ function damage_enem(hit, _damage_amount, ignore_invuln)
 	-- flash enemy
 	hit.flash = hit.flash<-1 and 4 or hit.flash
 
-	if not hit.dead then 
+	if hit.health<=0 and not hit.dead then  
 		hit.dead=true
 
 		local sui=hit.sui_shot

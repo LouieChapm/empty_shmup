@@ -141,27 +141,6 @@ function player_col(item) -- tokens maybe ?
 	return col(item,player)
 end
 
--- draw a single enemy
-
-function drw_enem(e)
-	if(e.disabled and global_flash)return
-	local flash=e.flash>0 or e.anchor and e.anchor.flash>0
-	if(flash and t%4<2)allpal(9)
-	
-
-
-	local drw_data=pack(abs(e.s),e.sx+e.ox,e.sy+e.oy,15,6)
-	if e.s>0 then
-		sspr_obj(unpack(drw_data))
-	else 
-		sspr_anim(unpack(drw_data))
-	end
-
-	
-	if(e.flash>-1)allpal()e.flash-=1
-	if(e.anchor and e.anchor.flash>0)allpal()
-end
-
 -- replaces every colour with a colour
 -- used for sprite flash
 function allpal(_col)

@@ -55,30 +55,13 @@ function prepare_spawn(_data)
     map_nextspawn = map_spawnstep<=#enemy_spawns and enemy_spawns[map_spawnstep] or nil
 end
 
--- just a simple map ground object that is a speed and type
-function new_ground(_type, _speed, _yspawn)
-	return add(grounds,{_type, _speed, _yspawn})	-- eventual goal
-end
-
-function upd_ground(_ground)
-	_ground[3]+=_ground[2]
-end
-
--- map_x,map_y, map_w,map_h, map_x, offset_y
-ground_data=parse_data"108,30,20,2,-16,-5"
-function drw_ground(_ground)
-	local sx,sy,sw,sh,dx,oy = unpack(ground_data[_ground[1]])
-	map(sx,sy,dx,flr(_ground[3] + oy),sw,sh)
-
-	if(_ground[3] > 160)del(grounds,_ground)		-- delete the object if it goes off screen
-end
 
 function check_spawn(_spawn)
 	if _spawn[1]<=0 then
 		local frame,path,unit, sx,sy=unpack(_spawn[2])
 		local offset_x,offset_y,ground_data=_spawn[3] or 0,_spawn[4] or 0, _spawn[5]
 		if(ground_data)sy = ground_data[3]
-		spawn_enem(path,unit, sx + offset_x,sy + offset_y, nil,nil, ground_data) -- from base_shmup -- might move :/
+		spawn_enem(path,unit, sx + offset_x,sy + offset_y, nil,nil, ground_data)
 		del(map_spawnpreps,_spawn)
 	else
 		_spawn[1]-=1
@@ -90,9 +73,9 @@ end
 
 --8151
 function spawn_enem(_path, _type, _spawn_x, _spawn_y, _ox, _oy, _ground_data)
-
 	local enemy=setmetatable({},{__index=_ENV})
 	local _ENV=enemy
+	
 	s,health,hb,deathmode,sui_shot,value,elite,exp,coin_value=unpack(enemy_data[_type])
 	hb,elite,active,type,sx,sy,ox,oy,x,y,t,shot_index,perc,flash,path_index,pathx,pathy,anchors,patterns,turrets,lerpperc,intropause,ground_data=gen_hitbox(hb),elite==1,true,_type,_spawn_x,_spawn_y,_ox or 0, _oy or 0,63,-18,0,1,0,0,_path,{},{},{},{},{},-1,0,_ground_data
 
@@ -104,6 +87,26 @@ function spawn_enem(_path, _type, _spawn_x, _spawn_y, _ox, _oy, _ground_data)
 	-- if(_type==5)active=false spawn_anchor(_ENV,3,-3,-2)spawn_anchor(_ENV,4,3,-2)  -- _ENV is self not global
 
 	return add(enems,_ENV)
+end
+
+
+-- just a simple map ground object that is a speed and type
+function new_ground(_type, _speed, _yspawn)
+	return add(grounds,{_type, _speed, _yspawn})	-- eventual goal
+end
+
+-- todo might be able to get rid of this
+function upd_ground(_ground)
+	_ground[3]+=_ground[2] == 0 and map_speed or _ground[2] -- if speed is 0 then match whatever the map speed is
+end
+
+-- map_x,map_y, map_w,map_h, map_x, offset_y
+map_ground_data=parse_data"108,28,20,1,-16,0|108,30,20,2,-16,-5"
+function drw_ground(_ground)
+	local sx,sy,sw,sh,dx,oy = unpack(map_ground_data[_ground[1]])
+	map(sx,sy,dx,flr(_ground[3] + oy),sw,sh)
+
+	if(_ground[3] > 160)del(grounds,_ground)		-- delete the object if it goes off screen
 end
 
 -- update each enemy
@@ -138,4 +141,25 @@ function upd_enem(_enemy)
 	_enemy.flash-=1 
 	
 	if(_enemy.path and player_lerp_delay<=0)enem_path_shoot(_enemy)
+end
+
+
+-- draw a single enemy
+function drw_enem(e)
+	if(e.disabled and global_flash)return
+	local flash=e.flash>0 or e.anchor and e.anchor.flash>0
+	if(flash and t%4<2)allpal(9)
+	
+
+
+	local drw_data=pack(abs(e.s),e.sx+e.ox,e.sy+e.oy,e.t,15)
+	if e.s>0 then
+		sspr_obj(unpack(drw_data))
+	else 
+		sspr_anim(unpack(drw_data))
+	end
+
+	
+	if(e.flash>-1)allpal()e.flash-=1
+	if(e.anchor and e.anchor.flash>0)allpal()
 end

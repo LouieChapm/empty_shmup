@@ -124,7 +124,7 @@ function damage_enem(hit, damage_amount, ignore_invuln)
 	-- flash enemy
 	hit.flash = hit.flash<-1 and 4 or hit.flash
 
-	if not hit.dead then 
+	if hit.health<=0 and not hit.dead then 
 		hit.dead=true
 
 		local sui=hit.sui_shot

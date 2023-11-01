@@ -15,6 +15,7 @@ __lua__
 #include inf_spawns.txt
 #include inf_enems.txt
 
+map_speed = 0.3
 
 --8151
 function spawn_enem(_path, _type, _spawn_x, _spawn_y, _ox, _oy, _ground_data)

@@ -123,7 +123,7 @@ function damage_enem(hit, damage_amount, ignore_invuln)
 	-- flash enemy
 	hit.flash = hit.flash<-1 and 4 or hit.flash
 
-	if not hit.dead then 
+	if hit.health<=0 and not hit.dead then 
 		hit.dead=true
 
 		local sui=hit.sui_shot
@@ -220,7 +220,7 @@ function upd_options()
 		time_in_stance_b=0
 	end
 
-	-- particles
+	-- particles on stance change
 	if time_in_stance_b%2!=0 and time_in_stance_b<8 then 
 		local part=new_basepart(opt_burst.x+1,opt_burst.y,0,-.8-time_in_stance_b*.05,p_wave,10)
 		part.rad,part.torad,part.toradspd=1,20-time_in_stance_b,0.25
@@ -306,7 +306,7 @@ function player_movement()
 		-- add data back to table for niceties
 		player.x,player.y=player_x,player_y
 
-		if(prev_stance!=target_stance and target_stance==1)opt_x,opt_y,player_shot_pause,draw_particles_above=delx,dely,30,30
+		if(prev_stance!=target_stance and target_stance==1)opt_x,opt_y,player_shot_pause,draw_particles_above=delx,dely,30,15
 	end
 
 	-- delayed x/y
