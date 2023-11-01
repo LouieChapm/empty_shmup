@@ -27,7 +27,7 @@
 ]]
 
 function init_player()
-	type = "c"
+	ship_type = 1
 
 	save("speeda,speedb,psp,pr8,plm,olm,ps_maxvol,ps_minimum_volley_trigger,ps_volley_count","2.2,1.5,5,2,30,3,6,3,0")
 

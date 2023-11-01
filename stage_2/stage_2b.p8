@@ -10,7 +10,7 @@ fmenu_cart_address="../menu/shmup_menu.p8"
 #include data/inf_enems.txt
 
 #include ../src/base_shmup.lua
-#include ../src/ships/type_c.lua
+#include ../src/ships/type_a.lua
 
 #include mapfuncs_s2.lua
 #include ../src/sprfuncs.lua
@@ -31,16 +31,16 @@ fmenu_cart_address="../menu/shmup_menu.p8"
 
 
 function _init()
+	stage = 2
+
 	hitboxes = parse_data"0,0,2,2|-3,-4,8,8|-2,-16,8,12"
 
-	cartdata"kalika_v1_01"
+	cartdata"kalikan"
 	dset(63,0)
 	highscore=tostr(dget"0",0x2).."0"
 
-	save("t,player_lerpx_1,player_lerpy_1,player_lerpx_2,player_lerpy_2,player_lerp_perc,player_lerp_speed,player_lerp_delay,player_lerp_type,combo_on_frame,map_progress,map_speed,score_in_combo,bullet_cancel_origin,bullet_cancel,shot_pause,max_rank,speed_target,final_boss_phase,draw_particles_above,coin_chain_timer,coin_chain_amount","0,64,150,63,95,0,2,0,easeout,0,128,.4,0,0,0,0,1100,.4,1,-1,0,0")
-	save("ground_closed_perc",".5")
-
-	save("fade_amount","1")
+	save("t,player_lerpx_1,player_lerpy_1,player_lerpx_2,player_lerpy_2,player_lerp_perc,player_lerp_speed,player_lerp_delay,player_lerp_type,combo_on_frame,score_in_combo,bullet_cancel_origin,bullet_cancel,shot_pause,max_rank,final_boss_phase,draw_particles_above,coin_chain_timer,coin_chain_amount","0,64,150,63,95,0,2,0,easeout,0,0,0,0,0,1100,1,-1,0,0")
+	
 
 	init_baseshmup(enemy_data)
 
@@ -58,14 +58,20 @@ function _init()
 	-- index, rate, direction, ox, oy, rate offset
 
 	-- all bletters have 8,13 w/h
-	turret_data,combo_big_letters,pickup_colours,speed_changes,spiral_exit,slow_motion=parse_data"11,120,?,0,0,0|16,90,-1,0,0,0|15,15,?,-10,4,0|15,15,-?,10,4,0|19,120,.75,0,0,45|27,50,.75,0,-2,0|16,160,-1,-10,-10,0|16,160,-1,10,-10,90|27,50,.25,0,-2,25|36,120,.75,0,0,30|60,45,.75,0,0,0|64,25,-1,0,0,0|68,76,.75,0,0,0|70,45,.75,0,0,0|71,120,-1,0,0,23|72,120,-1,0,0,0|76,200,-1,0,0,100|77,3,.75,0,0,0|80,30,.75,0,0,0|41,8,.75,0,0,0|83,90,-1,0,0,0|83,90,-1,0,0,45|67,75,.75,0,0,0|88,75,-1,0,0,23|72,120,-1,0,0,60|74,30,.75,0,0,0|89,5,.75,0,0,0",parse_data"89,39|78,52|86,52|94,52|102,50|115,73|57,39|65,39|73,39|81,39",parse_data"0,8,9|10,11,12|1,2,3",parse_data"30000,<< should never reach this",false,false
-	meter_colours,combo_colours,map_segments=unpack(parse_data"8,8,9,9,2,2,2,3,3,12,12|0,8,9,1,2,3,10,11,12,10,12,10,7,7,7|0,0,1,0,0,1,0,0,1, 0,0,1,0,0,1,0,0,1, 0,0,1,0,0,1,0,0,1, 0,0,1,0,0,1,0,0,1, 0,0,1,0,0,1,0,0,1 ")
+	turret_data=parse_data"11,120,?,0,0,0|16,90,-1,0,0,0|15,15,?,-10,4,0|15,15,-?,10,4,0|19,120,.75,0,0,45|27,50,.75,0,-2,0|16,160,-1,-10,-10,0|16,160,-1,10,-10,90|27,50,.25,0,-2,25|36,120,.75,0,0,30|60,45,.75,0,0,0|64,25,-1,0,0,0|68,76,.75,0,0,0|70,45,.75,0,0,0|71,120,-1,0,0,23|72,120,-1,0,0,0|76,200,-1,0,0,100|77,3,.75,0,0,0|80,30,.75,0,0,0|41,8,.75,0,0,0|83,90,-1,0,0,0|83,90,-1,0,0,45|67,75,.75,0,0,0|88,75,-1,0,0,23|72,120,-1,0,0,60|74,30,.75,0,0,0|89,5,.75,0,0,0"
+	
+	speed_changes=parse_data"30000,<< should never reach this"
+	
+	map_segments=split"0,1,0,0,1,0,0,1, 0,0,1,0,0,1,0,0,1, 0,0,1,0,0,1,0,0,1, 0,0,1,0,0,1,0,0,1, 0,0,1,0,0,1,0,0,1"
+
+	save("map_progress,map_speed,map_speed_target","128,.8,.8")
 end
 
 function _update60()
 	t+=1
 	if(slow_motion and t%3!=0)return -- slow motion 
 
+	if(btnp(4))fade_exit,fade_lerpperc=true,0
 	
 	combo_on_frame-=1
 	if coin_chain_timer>1 then 
@@ -84,10 +90,10 @@ function _update60()
 	local target_obj,new_speed=unpack(speed_changes[1])
 	if map_timeline>=target_obj then
 		if(new_speed<=0)map_speed=abs(new_speed) 
-		speed_target=abs(new_speed)
+		map_speed_target=abs(new_speed)
 		deli(speed_changes,1)
 	end
-	map_speed=lerp(map_speed,speed_target,.001)
+	map_speed=lerp(map_speed,map_speed_target,.001)
 
 
 	if max_rank>=0 then
@@ -320,66 +326,33 @@ end
 -->8
 -- exit / load animation
 
-fade_table=parse_data([[2,2,133,130,130,128,128
-4,4,132,132,133,128,128
-9,9,4,4,132,130,128
-10,10,138,4,132,133,128
-5,5,133,133,130,128,128
-13,13,141,5,133,130,128
-6,6,134,141,5,133,128
-7,6,6,134,5,133,128
-136,136,2,132,130,130,128
-8,136,136,2,132,130,128
-3,3,131,131,129,128,128
-139,139,3,131,129,128,128
-138,138,138,5,5,133,128
-130,130,130,128,128,128,128
-133,133,130,130,128,128,128
-14,14,134,141,2,130,128]],"\n")
+-- PUT THE LEVEL COLOUR PALETTE HERE
+fade_table=parse_data([[2,2,132,5,133,130
+4,4,2,132,132,130
+9,9,4,4,132,130
+10,10,138,4,132,130
+5,5,5,133,133,130
+13,13,141,5,5,130
+6,134,134,13,141,130
+7,6,6,134,13,130
+136,136,2,2,130,130
+8,8,136,4,2,130
+3,3,131,1,1,130
+139,139,131,131,1,130
+138,138,134,141,5,130
+130,130,130,130,130,130
+133,133,133,130,130,130
+14,14,136,134,2,130]],"\n")
 
-fade_exit = false
-fade_pause = 30
-fade_lerpperc = 0
-function do_fade()
-	
-	fade_pause-=1
-	if(fade_pause<0)fade_lerpperc=mid(0,fade_lerpperc+.015,1)
-
-	fade_amount = lerp(tonum(not fade_exit), tonum(fade_exit), fade_lerpperc)
-
-	debug = fade_amount
-
-	if(spiral_exit and spiral_lerpperc==1)load("kalikan_menu.p8",nil,"died|1|"..score.."|"..highest_combo.."|2")
-
-	--[[
-	spiral_anim(lerp(tonum(spiral_exit),tonum(not spiral_exit),spiral_lerpperc))
-
-
-	if(spiral_pause>0)spiral_pause-=1
-
-	if(spiral_exit and spiral_lerpperc==1)load("kalikan_menu.p8",nil,"died|1|"..score.."|"..highest_combo.."|2")
-
-	if(spiral_lerpperc==1 and not spiral_exit or spiral_pause>0)return
-	spiral_lerpperc=mid(0,spiral_lerpperc+.015,1)
-	]]--
-
-	local col_index = flr(mid(0,fade_amount,1)*6)+1
-	for i=0,15 do 
-		pal(i,fade_table[i+1][col_index],1)
-	end
-end
 
 gate_closed = 0
 gate_speed = .8
 function draw_gate()
 	local offset = 64 * gate_closed
 
-	local seconds_wait = 1
+	local seconds_wait = 30
 	if(t\60>seconds_wait)gate_closed+=.002
 	gate_closed = mid(0,gate_closed,1)
-
-	debug = gate_closed
-
 	
 	rectfill(cam_x-1, cam_y, 63-offset, 128, 8)
 	rectfill(65+offset, cam_y, cam_x+129, 128, 8)

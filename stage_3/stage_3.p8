@@ -34,9 +34,11 @@ fmenu_cart_address="shmup_menu.p8"
 
 
 function _init()
+	stage = 3
+
 	hitboxes = parse_data"0,0,2,2|-3,-4,8,8|-2,-16,8,12"
 
-	cartdata"kalika_v1_01"
+	cartdata"kalikan"
 	dset(63,0)
 	highscore=tostr(dget"0",0x2).."0"
 

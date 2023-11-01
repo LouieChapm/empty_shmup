@@ -27,7 +27,7 @@
 ]]
 
 function init_player()
-	type = "a"
+	ship_type = 0
 
 	save("speeda,speedb,psp,pr8,plm,olm,stance_change_treshold,opt_x,opt_y,time_in_stance_b,ps_maxvol,ps_minimum_volley_trigger,ps_volley_count,jump_frames,time_in_stance_a,player_shot_pause","1.6,1.6,5,5,30,5,10,64,164,0,6,3,0,5,0,0")
 
@@ -35,15 +35,10 @@ function init_player()
 	psoff,psdir=unpack(parse_data"-4,-2,4,-2|.5,.5")
 
 	player,opt_burst,dash_hurt_enemies={x=63,y=140,hb=gen_hitbox(1)},{hb=gen_hitbox(1,parse_data"-10,-5,22,20")},{}
-
-	debug=""
 	
 	-- init options
 	for i=1,3 do add(options,{x=10,y=10,shot_count=0,muz=0,dir=.5}) end
 	-- init options
-
-	pal({[0]=2,4,9,10,5,13,6,7,136,8,3,139,138,130,133,14},1)
-	poke(0x5f2e,1)
 end
 
 function update_player()

@@ -6,7 +6,7 @@ function save(_a,_b)
     local a,b=split(_a),split(_b)
     for i=1,#a do 
 		local dat=b[i]
-        _𝘦𝘯𝘷[a[i]]=dat=="true" and true or dat=="false" and false or dat
+        _𝘦𝘯𝘷[a[i]]=dat=="true" and true or dat
     end
 end
 
@@ -19,8 +19,13 @@ function init_baseshmup(_enemy_data)
 	enems,puls,options,opuls,hitregs,pickups,turret_sprites={},{},{},{},{},{},split"37,38,39,40,41"
 	enemy_data=parse_data(_enemy_data,"\n")
 
-	-- ?"\^!5f10249:5=67☉83⬅️⌂🐱ˇ>"
-	-- pal({[0]=2,4,9,10,5,13,6,7,136,8,3,139,138,130,133,14},1)
+
+	-- fade stuff !
+	save("fade_pause,fade_lerpperc","15,0")
+	fade_exit,slow_motion=false,false
+
+	combo_big_letters,pickup_colours = parse_data"89,39|78,52|86,52|94,52|102,50|115,73|57,39|65,39|73,39|81,39",parse_data"0,8,9|10,11,12|1,2,3"
+	meter_colours,combo_colours=unpack(parse_data"8,8,9,9,2,2,2,3,3,12,12|0,8,9,1,2,3,10,11,12,10,12,10,7,7,7")
 end
 
 
@@ -624,5 +629,34 @@ function draw_ui()
 		sspr_obj(21,ox-9*i,122)
 	end
 	::skip_this_bullshit::
+end
 
+
+
+function do_fade()
+	fade_pause-=1
+	if(fade_pause<0)fade_lerpperc=mid(0,fade_lerpperc+.04,2)
+
+	fade_amount = lerp(tonum(not fade_exit), tonum(fade_exit), fade_lerpperc)
+
+	if(fade_exit and fade_lerpperc>1.5)return_to_menu()
+
+	local col_index = flr(mid(0,fade_amount,1)*5)+1		-- tokens
+	for i=0,15 do 
+		pal(i,fade_table[i+1][col_index],1)
+	end
+end
+
+function return_to_menu()
+
+	-- only saves data for a high score if you want it to
+	-- i.e practise mode
+	local saves = {ship_type,stage,highest_combo,score}
+	for i=1,#saves do 
+		dset(49+i,saves[i])
+	end
+
+	dset(59,1)	-- tell the game that you died :(
+
+	load("../menu/kalikan_menu.p8")
 end
