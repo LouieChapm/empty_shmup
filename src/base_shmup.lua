@@ -14,6 +14,8 @@ end
 function init_baseshmup(_enemy_data)
 	-- player shot speed / shot rate / shot limit
 
+	save("t,player_lerpx_1,player_lerpy_1,player_lerpx_2,player_lerpy_2,player_lerp_perc,player_lerp_speed,player_lerp_delay,player_lerp_type,combo_on_frame,score_in_combo,bullet_cancel_origin,bullet_cancel,shot_pause,max_rank,draw_particles_above,coin_chain_timer,coin_chain_amount","0,64,150,63,95,0,2,0,easeout,0,0,0,0,0,1100,-1,0,0")
+	
 	save("score,lives,live_preview_offset,live_flash,bombs,bomb_preview_offset,bomb_flash,pmuz,pause_combo,combo_num,combo_counter,combo_freeze,disable_timer,player_immune,player_flash,ps_held_prev,screen_flash,bnk,bnkspd,plast,op_perc","0,2,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0.3,0,1")
 
 	enems,puls,options,opuls,hitregs,pickups,turret_sprites={},{},{},{},{},{},split"37,38,39,40,41"
@@ -328,7 +330,7 @@ function upd_turret(_data)
 	local enem,index,rate,dir,ox,oy,rox=unpack(_data)
 	
 	if(boss_active)goto skip
-	if(enem.y>64 or enem.y<5)return
+	if(enem.y>90 or enem.y<5)return
 	::skip::
 
 	if (enem.t+rox)%rate==0 then 

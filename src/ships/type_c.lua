@@ -149,7 +149,7 @@ function player_hurt(_source)
 	for pickup in all(pickups) do pickup.seek=false end
 
 	
-	if(lives<0)save("slow_motion,disable_timer,spiral_lerpperc,spiral_exit,spiral_pause","true,99999,0,true,90")  return
+	if(lives<0)save("slow_motion,disable_timer,fade_lerpperc,fade_exit,fade_pause","true,99999,0,true,90")  return
 
 	sfx(55,2)
 end

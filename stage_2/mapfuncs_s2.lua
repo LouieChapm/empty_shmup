@@ -85,6 +85,7 @@ function spawn_enem(_path, _type, _spawn_x, _spawn_y, _ox, _oy, _ground_data)
 
 	-- custom enemy spawn info vvvv
 	-- if(_type==5)active=false spawn_anchor(_ENV,3,-3,-2)spawn_anchor(_ENV,4,3,-2)  -- _ENV is self not global
+	if(_type==5)add_turret(_ENV,1)
 
 	return add(enems,_ENV)
 end
@@ -150,7 +151,6 @@ function drw_enem(e)
 	local flash=e.flash>0 or e.anchor and e.anchor.flash>0
 	if(flash and t%4<2)allpal(9)
 	
-
 
 	local drw_data=pack(abs(e.s),e.sx+e.ox,e.sy+e.oy,e.t,15)
 	if e.s>0 then
