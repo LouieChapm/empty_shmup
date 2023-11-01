@@ -4,109 +4,124 @@ __lua__
 debug=""
 version_id="V2.02"
 
--- convert old format memory into new format
-function move_data()
-	dset(0,dget(0))
-	dset(1,dget(1))
-	local co_and_ship="2"..sub("000"..min(dget(2),999),-3)
-	dset(2,co_and_ship)
-
-	dset(3,dget(3))
-	dset(4,dget(4))
-	local co_and_ship="2"..sub("000"..min(dget(5),999),-3)
-	dset(5,co_and_ship)
-
-	dset(6,dget(6))
-	dset(7,dget(7))
-	local co_and_ship="2"..sub("000"..min(dget(8),999),-3)
-	dset(8,co_and_ship)
-
-
-	-- I HAVE TO DO IT BACKWARDS SO IT DOESNT OVERWRIGHT ITSELF
-
-	dset(23,2000)
-	dset(22,dget(18))
-	dset(21,dget(17))
-
-	dset(20,2000)
-	dset(19,dget(16))
-	dset(18,dget(15))
-
-	dset(17,2000)
-	dset(16,dget(14))
-	dset(15,dget(13))
-
-	dset(14,2000)
-	dset(13,dget(12))
-	dset(12,dget(11))
-
-	dset(11,2000)
-	dset(10,dget(10))
-	dset(9,dget(9))
-
-end
-
 function reset_data()
 	local name_list={0b011100000101111,0b000100000010011,0b010110101010010,0b100110011001110,0b000000101010011,0b101100011101110,0b000001001001100,0b001011000100011,0b000111010001010,0b000100000010101,0b000110001101111}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	local default_data={
 		0.5238,
 		0b000000011000001,
-		81,
+		14981,
 		0.4117,
 		del(name_list,rnd(name_list)),
-		92,
+		01092,
 		0.3086,
 		del(name_list,rnd(name_list)),
-		10,
+		11010,
 		0.3065,
 		del(name_list,rnd(name_list)),
+		01010,
 		0.2047,
 		del(name_list,rnd(name_list)),
+		11399,
 		0.1039,
 		del(name_list,rnd(name_list)),
+		11993,
 		0.1032,
 		del(name_list,rnd(name_list)),
+		01111,
 		0.1021,
 		del(name_list,rnd(name_list)),
+		01011,
 	}
-
-	--[[
-	local default_data={
-		0.5238,
-		0b000000011000001,
-		2981,
-
-		0.4117,
-		del(name_list,rnd(name_list)),
-		2092,
-
-		0.3086,
-		del(name_list,rnd(name_list)),
-		2010,
-
-		0.3065,
-		del(name_list,rnd(name_list)),
-		2010,
-
-		0.2047,
-		del(name_list,rnd(name_list)),
-		2399,
-		
-		0.1039,
-		del(name_list,rnd(name_list)),
-		2993,
-
-		0.1032,
-		del(name_list,rnd(name_list)),
-		2111,
-
-		0.1021,
-		del(name_list,rnd(name_list)),
-		2011,
-
-	}
-	]]--
 
 	for i=0,64 do 
 		dset(i,default_data[i+1])
@@ -117,10 +132,9 @@ function _init()
 	t=0
 
 	cartdata"kalika_v1_01"
-	local menu_start_screen="ramcheck"
+	local menu_start_screen="highscores"
 	if(dget(0)==0)reset_data()
 	reset_data()
-	if(dget(21)==0)move_data()
 
 	is_duplicate_load=dget(63)==1
 
@@ -452,8 +466,8 @@ function drw_hs_small(_x,_y,_num)
 	sspr(6,62,10,7,num_x,num_y)
 	sspr(0,62+(_num-4)*7,5,7,num_x-6,num_y)
 
-	local combo=dget(mem_region+2)
-	local ship_index=tonum(sub(combo,1,1))
+	local combo=sub("0"..dget(mem_region+2),-5)
+	local ship_index=tonum(sub(combo,1,1))+1
 
 	if ship_index==1 then 
 		palt(9,true)
@@ -497,21 +511,23 @@ function drw_hs_big(_x,_y,_num,_height)
 	local highscore=tostr(dget(mem_location),0x2).."0"
 	print(highscore,score_x+46-(#highscore*4),score_y+2,7)
 
+	local combo=sub("0"..dget(mem_location+2),-5)
+	local ship_index=tonum(sub(combo,1,1))+1
+	local max_combo=tostr(tonum(sub(combo,-3)))
+
+	
 	-- area indicator
 	local area_x,area_y=ox+18,oy+14
 	rrectfill(area_x,area_y,23,8,13)
 	print("AREA",area_x+2,area_y+2,7)
 	print("8",area_x+19,area_y+2,4)
-	print("1",area_x+19,area_y+2,7)
+	print(tonum(sub(combo,2,2)),area_x+19,area_y+2,7)
+
+	
+
 
 	-- max hit
 	local area_x,area_y=ox+44,oy+14
-
-	local combo=dget(mem_location+2)
-	local ship_index=tonum(sub(combo,1,1))
-	local max_combo=tostr(tonum(sub(combo,2,4)))
-
-	
 
 	rrectfill(area_x,area_y,42,8,13)
 	print("MAX \-eHIT",area_x+2,area_y+2,7)
