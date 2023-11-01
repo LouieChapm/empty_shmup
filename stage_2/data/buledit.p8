@@ -41,6 +41,8 @@ helpers={split"none",split"spd mult,anim index,anim spd,filter ref",split"refere
 
 
 function _init()
+	cartdata"kalikan_buledit_2"
+
 	t=0
 	temp=""
 
@@ -79,6 +81,7 @@ function _init()
 
 	poke(0x5f2d, 1) -- keyboard access
 	
+	pal({[0]=2,4,9,10,5,13,6,7,136,8,3,139,138,130,133,14},1)
 	palt(0,false)
 	
 

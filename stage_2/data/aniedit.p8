@@ -1,15 +1,17 @@
 pico-8 cartridge // http://www.pico-8.com
 version 41
 __lua__
-bg_col=8
-ln_col=9
+bg_col=5
+ln_col=4
 
 show_ui=true
 
 debug=""
 debug_time=0
 
-max_sprites=30
+-- PUT THE LEVEL COLOUR PALETTE HERE
+palette=split"2,4,9,10,5,13,6,7,136,8,3,139,138,130,133,14"
+
 
 alphabet=split"a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,_" -- letters and underscore 
 numbers=split("0,1,2,3,4,5,6,7,8,9,-,., ",",",false)
@@ -27,6 +29,13 @@ anim_info_types=split"frames"
 
 
 function _init()
+	cartdata"kalikan_aniedit_2"
+
+	--[[
+		0: library index
+		1: animation index
+	]]
+
     add(numbers,",")
 
 	t=0
@@ -50,12 +59,15 @@ function _init()
         mode="select",
         editor="normal",
 
-        lib_index=1,
-        ani_index=1,
+        lib_index=dget(0)~=0 and dget(0) or 1,
+        ani_index=dget(1)~=0 and dget(1) or 1,
     }
 
 	poke(0x5f2d, 1) -- keyboard access
 
+
+	
+	pal({[0]=2,4,9,10,5,13,6,7,136,8,3,139,138,130,133,14},1)
 	palt(0,false)
 
 	old_transparent=-1
@@ -63,6 +75,9 @@ end
 
 
 function _update60()
+	dset(0,nav.lib_index)
+	dset(1,nav.ani_index)
+
 	t+=1
     
 
@@ -374,12 +389,14 @@ function draw_bg()
     fillp(0x33cc.8)
     rectfill(0,0,128,128,ln_col)
 
+	local line_col = 14
+
     fillp(▤)
-    line(63,0,63,60,2)
-    line(63,66,63,128,2)
+    line(63,0,63,60,line_col)
+    line(63,66,63,128,line_col)
     fillp(▥)
-    line(0,63,60,63,2)
-    line(66,63,128,63,2)
+    line(0,63,60,63,line_col)
+    line(66,63,128,63,line_col)
     fillp()
 end
 -->8
@@ -401,7 +418,7 @@ function get_player_dir(_x,_y)
 end
 
 function printbg(text,x,y,c)
-	print("\#1"..tostring(text),x,y,c or 7)
+	print("\#e"..tostring(text),x,y,c or 7)
 end
 
 function parse_data(_data)

@@ -44,6 +44,8 @@ function my_menu_item(b)
 end
 
 function _init()
+	cartdata"kalikan_pathedit_2"
+
 	t=0
 	temp=""
 
@@ -72,8 +74,6 @@ function _init()
 
 	editor_library=parse_info_editor(editor_path_library)
 
-
-	poke(0x5f2d, 1)
 	reset_info=false
 	
 	nav={
@@ -103,6 +103,9 @@ function _init()
 	enem.x,enem.y=spawn_x,spawn_y
 
 	cscroll=0
+
+	pal({[0]=2,4,9,10,5,13,6,7,136,8,3,139,138,130,133,14},1)
+	poke(0x5f2d, 1)
 end
 
 

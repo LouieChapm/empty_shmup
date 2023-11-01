@@ -52,6 +52,8 @@ dont_fire=true
 max_rank=-1
 
 function _init()
+	cartdata"kalikan_mapedit_2"
+
 	t=0
 
 	debug = ""
@@ -93,6 +95,8 @@ function _init()
 		x=64,
 		y=100,
 	}
+
+	pal({[0]=2,4,9,10,5,13,6,7,136,8,3,139,138,130,133,14},1)
 end
 
 function _update60()
