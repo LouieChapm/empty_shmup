@@ -102,7 +102,7 @@ function upd_ground(_ground)
 end
 
 -- map_x,map_y, map_w,map_h, map_x, offset_y
-map_ground_data=parse_data"108,28,20,1,-16,0|108,30,20,2,-16,-5|125,27,3,3,offset:-11,2"
+map_ground_data=parse_data"108,28,20,1,-16,0|108,30,20,2,-16,-5|125,27,3,3,offset:-11,2|121,27,4,3,offset:-16,-8"
 function drw_ground(_ground)
 	local sx,sy,sw,sh,dx,oy = unpack(map_ground_data[_ground[1]])
 	local _x = split(dx,":")
