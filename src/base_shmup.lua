@@ -338,8 +338,8 @@ function upd_turret(_data)
 		-- direction , offset x/y , rate offset
 		local tdir = dir
 
-		if(dir=="?")tdir=enem.dir
-		if(dir=="-?")tdir=-enem.dir
+		if(dir=="?")tdir=enem.direction
+		if(dir=="-?")tdir=-enem.direction
 
 		add(enem.patterns, create_spawner(index,enem,tdir,nil,ox,oy))
 	end

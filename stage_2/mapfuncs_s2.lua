@@ -124,7 +124,7 @@ function upd_enem(_enemy)
 	_enemy.t+=1
 
 	if(_enemy.lerpperc>=0)upd_lerp(_enemy)
-	if(_enemy.brain)upd_brain(_enemy,_enemy.brain)
+	upd_brain(_enemy)
 	if _enemy.intropause<=0 then
 		foreach(_enemy.turrets,upd_turret)
 	else 
@@ -143,6 +143,25 @@ function upd_enem(_enemy)
 	_enemy.flash-=1 
 	
 	if(_enemy.path and player_lerp_delay<=0)enem_path_shoot(_enemy)
+end
+
+function upd_brain(enemy)
+	local index=enemy.type 
+
+	if index==6 and t%5==0 and enemy.y<player_y then
+		-- enemy _index 6
+		local frames = split"110,111,112,113,114"
+
+		local direction=(get_player_dir(enemy.x,enemy.y)+.03125)\.0625 -- calculate direction in seg16
+		local old = enemy.direction or 0
+		local dir = mid(old -.0625, direction*.0625, old+.0625)
+		enemy.direction=mid(.625, dir,.875)
+
+
+		local visible=(enemy.direction\.0625)-9
+		if(visible<0)visible=abs(visible+2)
+		enemy.s=frames[mid(1,visible,5)]
+	end
 end
 
 
