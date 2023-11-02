@@ -1,1 +1,1 @@
-bul_library=[[sprite,2.2,20,4,0|sprite,1.2,20,4,0|circ,2,2,5,0,50|burst,3,1,0.25,0|array,4,0,4,10,0,0|]]
+bul_library=[[sprite,2.2,6,1,0|sprite,2.2,6,2,0|sprite,2.2,6,3,0|sprite,2.2,6,4,0|array,4,0,4,10,0,0|]]

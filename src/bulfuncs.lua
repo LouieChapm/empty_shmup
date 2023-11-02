@@ -1,5 +1,8 @@
 --lint: func::_init
 function init_bulfuncs(_bul_library)
+	-- copy over the map data from the menu cart
+	-- reload(-0x800,0x2000,0x800,"../../menu/kalikan_menu.p8")
+
 	bul_library,spawners,buls,bul_hitboxes=parse_data(_bul_library),{},{},parse_data("-1,-1,4,4|-1,-1,3,3")
 end
 
@@ -12,7 +15,7 @@ end
 
 
 function drw_bulfunc(bul)
-	sspr_anim(bul.anim,bul.x,bul.y, bul.spawn, bul.anim_speed)
+	sspr_anim(bul.anim, bul.x,bul.y, bul.spawn, bul.anim_speed)
 end
 
 -- filters
