@@ -39,7 +39,7 @@ function prepare_spawn(_data)
 	if #_data[7]>1 then 
 		local gdata = split(_data[7],":")
 		time_offset = gdata[3] or 0
-		ground_data = new_ground(gdata[1],gdata[2],_data[5])
+		ground_data = new_ground(gdata[1],gdata[2],_data[4],_data[5])
 	end
 	add(map_spawnpreps,{0 + time_offset,map_nextspawn,nil,nil,ground_data})
 
@@ -60,7 +60,7 @@ function check_spawn(_spawn)
 	if _spawn[1]<=0 then
 		local frame,path,unit, sx,sy=unpack(_spawn[2])
 		local offset_x,offset_y,ground_data=_spawn[3] or 0,_spawn[4] or 0, _spawn[5]
-		if(ground_data)sy = ground_data[3]
+		if(ground_data)sy = ground_data[4]
 		spawn_enem(path,unit, sx + offset_x,sy + offset_y, nil,nil, ground_data)
 		del(map_spawnpreps,_spawn)
 	else
@@ -92,22 +92,23 @@ end
 
 
 -- just a simple map ground object that is a speed and type
-function new_ground(_type, _speed, _yspawn)
-	return add(grounds,{_type, _speed, _yspawn})	-- eventual goal
+function new_ground(_type, _speed, _xspawn, _yspawn)
+	return add(grounds,{_type, _speed, _xspawn, _yspawn})	-- eventual goal
 end
 
 -- todo might be able to get rid of this
 function upd_ground(_ground)
-	_ground[3]+=_ground[2] == 0 and map_speed or _ground[2] -- if speed is 0 then match whatever the map speed is
+	_ground[4]+=_ground[2] == 0 and map_speed or _ground[2] -- if speed is 0 then match whatever the map speed is
 end
 
 -- map_x,map_y, map_w,map_h, map_x, offset_y
-map_ground_data=parse_data"108,28,20,1,-16,0|108,30,20,2,-16,-5"
+map_ground_data=parse_data"108,28,20,1,-16,0|108,30,20,2,-16,-5|125,27,3,3,offset:-11,2"
 function drw_ground(_ground)
 	local sx,sy,sw,sh,dx,oy = unpack(map_ground_data[_ground[1]])
-	map(sx,sy,dx,flr(_ground[3] + oy),sw,sh)
+	local _x = split(dx,":")
+	map(sx,sy,#_x>1 and _x[2] + _ground[3] or dx,flr(_ground[4] + oy),sw,sh)
 
-	if(_ground[3] > 160)del(grounds,_ground)		-- delete the object if it goes off screen
+	if(_ground[4] > 160)del(grounds,_ground)		-- delete the object if it goes off screen
 end
 
 -- update each enemy
@@ -118,7 +119,7 @@ function upd_enem(_enemy)
 	end
 
 	-- move the enemy along the ground
-	if(_enemy.ground_data)_enemy.sy = _enemy.ground_data[3]
+	if(_enemy.ground_data)_enemy.sy = _enemy.ground_data[4]
 
 	_enemy.t+=1
 
