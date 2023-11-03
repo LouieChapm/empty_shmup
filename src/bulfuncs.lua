@@ -1,7 +1,17 @@
 function init_bulfuncs(_bul_library)
 	-- copy over the map data from the menu cart
-	-- reload(-0x800,0x2000,0x800,"../../menu/kalikan_menu.p8")
-	memcpy(0xb000,0,0x2000)
+	reload(-0x800,0x2000,0x800,"../../menu/kalikan_menu.p8")
+	memcpy(0xb000,0,0x2000)		-- save spritesheet to upper mem
+
+	--[[
+
+		0x0000
+			..
+		0x8000
+			...
+		0xffff
+
+	]]
 
 	bul_library,spawners,buls=parse_data(_bul_library),{},{}
 end
