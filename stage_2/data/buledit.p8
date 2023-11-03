@@ -276,58 +276,6 @@ function draw_module(_text,_x,_y,_is_on)
     printbg(_text,_x,_y,_is_on and 5+(t\10)%3 or 7)
 end
 
-b_sprite_scales = parse_data"8,8|7,6|8,8|8,8|7,7|10,10|8,8|5,5|5,5"
-b_sprite_offset = parse_data"-4,-4|-3,-3|-3,-3|-3,-3|-3,-3|-4,-4|-3,-3|-2,-2|-2,-2"
-b_sprite_xstart = split"0,9,17,26,35,43,54,63,69"
-
-b_sprite_aspeed = 4
-
-b_sprite_curpal = -1
-b_sprite_colour = parse_data"10,11,12,3|0,8,9,15|0,1,2,3|14,4,5,6"	-- changed depending on player
-
-function drw_buls()
-	-- reload(0,0x2000,0x800)
-
-	-- memcpy(0,-0x800,0x800)
-	-- cstore()
-
-	-- cstore()
-	-- stop()
-
-	-- bul.anim 		== is now bullet type
-	-- bul.anim_speed	== is now bullet colour
-	palt(15,true)
-
-	for bul in all(buls) do
-		-- change the colour of the bullet
-		if b_sprite_curpal~=bul.anim_speed then 
-			for i=0,3 do 
-				pal(i,b_sprite_colour[bul.anim_speed][i+1])
-			end
-			b_sprite_curpal = bul.anim_speed
-		end
-
-		local num = (bul.life\b_sprite_aspeed)%4
-
-		local ox,oy = unpack(b_sprite_offset[bul.anim])
-
-		local sx,sy = b_sprite_xstart[bul.anim],b_sprite_scales[bul.anim][2]*num 
-		local sw,sh = unpack(b_sprite_scales[bul.anim])
-
-		if(sx==43 and sy==30)sx,sy=118,0
-
-		sspr(sx,sy,sw,sh,bul.x + ox,bul.y + oy)
-	end
-
-	palt(15,false)
-
-	b_sprite_curpal = -1
-	allpal()
-
-
-	-- sspr(0,0,128,128,0,0)
-end
-
 
 function draw_bg()
 	local gap=16

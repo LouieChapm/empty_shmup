@@ -139,7 +139,8 @@ function _draw()
 	circfill(x+1,y,3,0)
 	print("❎",x-3,y-2,bg_col)
 
-	foreach(buls,drw_bulfunc)	
+	--foreach(buls,drw_bulfunc)	
+	drw_buls()
 
 	drw_sidebar()
 

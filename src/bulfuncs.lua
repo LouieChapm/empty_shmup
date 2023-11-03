@@ -1,9 +1,9 @@
---lint: func::_init
 function init_bulfuncs(_bul_library)
 	-- copy over the map data from the menu cart
 	-- reload(-0x800,0x2000,0x800,"../../menu/kalikan_menu.p8")
+	memcpy(0xb000,0,0x2000)
 
-	bul_library,spawners,buls,bul_hitboxes=parse_data(_bul_library),{},{},parse_data("-1,-1,4,4|-1,-1,3,3")
+	bul_library,spawners,buls=parse_data(_bul_library),{},{}
 end
 
 function upd_bulfuncs()
@@ -13,10 +13,64 @@ function upd_bulfuncs()
 	foreach(spawners,upd_spawner)
 end
 
+b_sprite_scales = parse_data"8,8|7,6|8,8|8,8|7,7|10,10|8,8|5,5|5,5"
+b_sprite_offset = parse_data"-4,-4|-3,-3|-3,-3|-3,-3|-3,-3|-4,-4|-3,-3|-2,-2|-2,-2"
+b_sprite_xstart = split"0,9,17,26,35,43,54,63,69"
 
+b_sprite_aspeed = 4
+
+b_sprite_curpal = -1
+b_sprite_colour = parse_data"10,11,12,3|0,8,9,15|0,1,2,3|14,4,5,6"	-- changed depending on player
+
+bul_hitboxes = parse_data("-2,-2,4,4|-1,-1,3,2|-1,-1,4,4|-1,-1,4,4|-1,-2,3,5|-2,-2,6,6|-1,-1,4,4|-1,-1,3,3|-1,-1,3,3")
+
+function drw_buls()
+	-- reload(0,0x2000,0x800)
+
+	memcpy(0,-0x800,0x800)
+	-- cstore()
+
+	-- cstore()
+	-- stop()
+
+	-- bul.anim 		== is now bullet type
+	-- bul.anim_speed	== is now bullet colour
+	palt(15,true)
+
+	for bul in all(buls) do
+		-- change the colour of the bullet
+		if b_sprite_curpal~=bul.anim_speed then 
+			for i=0,3 do 
+				pal(i,b_sprite_colour[bul.anim_speed][i+1])
+			end
+			b_sprite_curpal = bul.anim_speed
+		end
+
+		local num = (bul.life\b_sprite_aspeed)%4
+
+		local ox,oy = unpack(b_sprite_offset[bul.anim])
+
+		local sx,sy = b_sprite_xstart[bul.anim],b_sprite_scales[bul.anim][2]*num 
+		local sw,sh = unpack(b_sprite_scales[bul.anim])
+
+		if(sx*sy==1290)sx,sy=118,0		-- move the big sprite yano
+
+		sspr(sx,sy,sw,sh,bul.x + ox,bul.y + oy)
+	end
+
+	palt(15,false)
+
+	b_sprite_curpal = -1
+	allpal()
+
+	memcpy(0,0xb000,0x2000)
+end
+
+--[[
 function drw_bulfunc(bul)
 	sspr_anim(bul.anim, bul.x,bul.y, bul.spawn, bul.anim_speed)
 end
+]]--
 
 -- filters
 function iterate_filters(bul)
@@ -82,9 +136,6 @@ end
 -->8
 -- tool
 function spawn_bul(_origin_x,_origin_y,_type,_dir,_speed,_ani_speed)
-	local hb_index=1 -- give bullet default hurtbox
-	if(_type==16)hb_index=2
-
     -- creates bullet at location , of type , with direction / speed , and set animation speed
 	local bul={
 
@@ -96,7 +147,7 @@ function spawn_bul(_origin_x,_origin_y,_type,_dir,_speed,_ani_speed)
 		wy=_origin_y, -- wy/oy is used for circles and such
 		oy=0,
 
-		hb=gen_hitbox(hb_index, bul_hitboxes),
+		hb=gen_hitbox(_type, bul_hitboxes),
 
 		anim=_type, -- animation reference || CANNOT be used with single sprites as of now
 		anim_speed=_ani_speed,

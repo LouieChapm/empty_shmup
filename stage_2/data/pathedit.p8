@@ -29,9 +29,9 @@ new_reset = false
 #include inf_crumbs.txt
 #include inf_enems.txt
 
+#include ../../src/base_shmup.lua
 #include ../../src/bulfuncs.lua
 #include ../../src/sprfuncs.lua
-#include ../../src/base_shmup.lua
 
 #include ../debugfuncs.lua
 
@@ -139,7 +139,8 @@ function _draw()
 	x,y=x+(tx*dist)+0.5,y+(ty*dist)+0.5
 	line(x,y,x+(tx*enem.spd*1),y+(ty*enem.spd*1),11)
 
-	foreach(buls,drw_bulfunc)	
+	-- foreach(buls,drw_bulfunc)
+	drw_buls()	
 
 	if(show_ui)draw_information()
 
