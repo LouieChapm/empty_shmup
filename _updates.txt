@@ -36,3 +36,7 @@ Changelog V2
 
 -- Upped type b laser combo add ~25% to make the weapon slightly useful
 -- added type a 
+
+
+Credits 
+	- Crown sprite inspired by Namatnieks

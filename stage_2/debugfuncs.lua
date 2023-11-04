@@ -1,6 +1,6 @@
 
 debug,debug_time="",0
-draw_hitboxes=true
+draw_hitboxes=false
 poke(0x5f2e,1) -- keeps the colours on quit
 
 

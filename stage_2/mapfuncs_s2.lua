@@ -161,6 +161,12 @@ function upd_brain(enemy)
 		local visible=(enemy.direction\.0625)-9
 		if(visible<0)visible=abs(visible+2)
 		enemy.s=frames[mid(1,visible,5)]
+	elseif index==7 then 
+		if(enemy.flash>=0)enemy.counter = 10
+		enemy.counter-=1
+
+		enemy.s = 116
+		if(enemy.counter>0 and t%2<2) enemy.s = 115 
 	end
 end
 
