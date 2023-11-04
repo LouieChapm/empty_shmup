@@ -144,7 +144,7 @@ function _draw()
 
 	if(draw_particles_above<0)foreach(parts,drw_part)
 
-	foreach(pickups,drw_pickup)					-- draw pickups
+	drw_pickups()
 
 	foreach(enems,drw_enem)						-- draw the enemies
 	foreach(anchors,drw_enem)

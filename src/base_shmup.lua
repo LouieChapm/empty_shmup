@@ -12,6 +12,21 @@ end
 
 --lint: func::_init
 function init_baseshmup(_enemy_data)
+	-- copy over the map data from the menu cart
+	reload(-0x2000,0,0x2000,"../kalikan_spritesheet.p8")	-- load persistent spritesheet from "menu"
+	memcpy(-0x4000,0,0x2000)										-- save spritesheet to upper mem
+
+	--[[
+
+		0x0000
+			..
+		0x8000
+			...
+		0xffff
+
+	]]
+
+
 	-- player shot speed / shot rate / shot limit
 
 	save("t,player_lerpx_1,player_lerpy_1,player_lerpx_2,player_lerpy_2,player_lerp_perc,player_lerp_speed,player_lerp_delay,player_lerp_type,combo_on_frame,score_in_combo,bullet_cancel_origin,bullet_cancel,shot_pause,max_rank,draw_particles_above,coin_chain_timer,coin_chain_amount","0,64,150,63,95,0,2,0,easeout,0,0,0,0,0,1100,-1,0,0")
@@ -367,96 +382,141 @@ function spawn_pickup(_originx,_originy,_amount,_speed,_type)
 	end
 end
 
-function drw_pickup(pickup)
-	local pickup_x,pickup_y=pickup.x+pickup.ox,pickup.y+pickup.oy
-	local dist=sqrt(abs(pickup_x-player_x)^2+abs(pickup_y-player_y)^2)
+pickup_sprites = split"17"
+function drw_pickups()
+	memcpy(0,-0x2000,0x2000)
 
-	pickup.life+=1
-	local type,life,bonus_type,visual_anim,collect_range,y_spd=pickup.type,pickup.life,-1,14,50,.35
-	is_bonus=type==2
-	if type==2 or type==3 then 
-		collect_range=20
+	for pickup in all(pickups) do 
 
-		y_spd=.15
-		if not pickup.dont_wave then 
-			local sin_offset=life*.001
-			pickup.ox,pickup.oy=sin(sin_offset)*25,cos(sin_offset*2)*10
+		-- delete these
+		local y_spd = .35
+		local collect_range = 35
+		-- delete these
+
+		local pickup_x,pickup_y=pickup.x+pickup.ox,pickup.y+pickup.oy
+		local dist=sqrt(abs(pickup_x-player_x)^2+abs(pickup_y-player_y)^2)
+
+		pickup.x+=sin(pickup.dir)*pickup.spd
+		pickup.y+=cos(pickup.dir)*pickup.spd+y_spd
+		pickup.spd*=.95
+
+		-- check if the pickup should be magnetised
+			-- break the follow if the player is respawning
+		if(player_lerp_delay<=0 and dist<collect_range)pickup.seek,pickup.dont_wave,pickup.ox,pickup.oy=true,true,0,0
+		
+		-- actual pickup magnet code
+		if(pickup.seek)pickup.x,pickup.y=lerp(pickup_x,player_x,0.2),lerp(pickup_y,player_y,0.2)
+
+		-- if the distance is close enough then delete the thing
+		if dist<10 then
+			spawn_oneshot(15,3,pickup_x,pickup_y)
+			del(pickups,pickup)
+
+			local value = 100
+			give_score(value,true)
+			new_text(pickup_x,pickup_y,value .. "0",45,true)
 		end
 
-		if(type==2)visual_anim,bonus_type=13,(pickup.t+life\90)%3
-		if(type==3)visual_anim,bonus_type,y_spd=14,4,.1
-	end
+		sspr_anim(pickup_sprites[1],pickup_x,pickup_y,pickup.t)
 
-	if player_lerp_delay<=0 and dist<collect_range then
-		pickup.seek,pickup.dont_wave,pickup.ox,pickup.oy=true,true,0,0				-- break the follow if the player is respawning
-	end
-	
-	
+		--[[
+		local pickup_x,pickup_y=pickup.x+pickup.ox,pickup.y+pickup.oy
+		local dist=sqrt(abs(pickup_x-player_x)^2+abs(pickup_y-player_y)^2)
 
-	if dist<10 then
-		spawn_oneshot(15,3,pickup_x,pickup_y)
-		del(pickups,pickup)
+		pickup.life+=1
+		local type,life,bonus_type,visual_anim,collect_range,y_spd=pickup.type,pickup.life,-1,14,50,.35
+		is_bonus=type==2
+		if type==2 or type==3 then 
+			collect_range=20
 
-		local _text="+bomb"
-
-		if bonus_type==0 or bonus_type==4 then
-			-- red
-			
-			if bombs>=3 then
-				give_score(5000, 1)
-				new_text(pickup_x,pickup_y-7,"bombs full",60)
-				new_text(pickup_x+4,pickup_y,"50000",90)
-				return
-			else
-				bombs+=1
+			y_spd=.15
+			if not pickup.dont_wave then 
+				local sin_offset=life*.001
+				pickup.ox,pickup.oy=sin(sin_offset)*25,cos(sin_offset*2)*10
 			end
-		elseif bonus_type==1 then
-			-- green
-			lives+=1
-			live_flash,_text=60,"extend"
-		elseif bonus_type==2 then
-			-- yellow
-			give_score(1000, 1)
-			combo_num+=30
-			combo_counter,_text=160,"10000"
-		else
-			coin_chain_timer=20
-			coin_chain_amount+=1
-			local num=50*min(coin_chain_amount,10)
-			give_score(num, 1)
-			new_text(pickup_x,pickup_y,num.."0",45,true)
-			sfx(61,2)
-			return
+
+			if(type==2)visual_anim,bonus_type=13,(pickup.t+life\90)%3
+			if(type==3)visual_anim,bonus_type,y_spd=14,4,.1
 		end
 
-		new_text(pickup_x,pickup_y,_text,90)
-		return
-	end	
-
-	pickup.x+=sin(pickup.dir)*pickup.spd
-	pickup.y+=cos(pickup.dir)*pickup.spd+y_spd
-	pickup.spd*=.95
-
-	if(pickup.seek)pickup.x,pickup.y=lerp(pickup_x,player_x,0.2),lerp(pickup_y,player_y,0.2)
-
-	if is_bonus then
-		local flash,index=life%90<5,1
-		for src in all(flash and split"1,2,3,4,5,6,7" or split"1,2,3") do 
-			pal(src,flash and 7 or pickup_colours[bonus_type+1][index]) 
-			index+=1
+		if player_lerp_delay<=0 and dist<collect_range then
+			pickup.seek,pickup.dont_wave,pickup.ox,pickup.oy=true,true,0,0				-- break the follow if the player is respawning
 		end
+		
+		
+
+		if dist<10 then
+			spawn_oneshot(15,3,pickup_x,pickup_y)
+			del(pickups,pickup)
+
+			local _text="+bomb"
+
+			if bonus_type==0 or bonus_type==4 then
+				-- red
+				
+				if bombs>=3 then
+					give_score(5000, 1)
+					new_text(pickup_x,pickup_y-7,"bombs full",60)
+					new_text(pickup_x+4,pickup_y,"50000",90)
+					return
+				else
+					bombs+=1
+				end
+			elseif bonus_type==1 then
+				-- green
+				lives+=1
+				live_flash,_text=60,"extend"
+			elseif bonus_type==2 then
+				-- yellow
+				give_score(1000, 1)
+				combo_num+=30
+				combo_counter,_text=160,"10000"
+			else
+				coin_chain_timer=20
+				coin_chain_amount+=1
+				local num=50*min(coin_chain_amount,10)
+				give_score(num, 1)
+				new_text(pickup_x,pickup_y,num.."0",45,true)
+				sfx(61,2)
+
+				goto continue
+			end
+
+			new_text(pickup_x,pickup_y,_text,90)
+			
+			goto continue		-- exit early
+		end	
+
+		pickup.x+=sin(pickup.dir)*pickup.spd
+		pickup.y+=cos(pickup.dir)*pickup.spd+y_spd
+		pickup.spd*=.95
+
+		if(pickup.seek)pickup.x,pickup.y=lerp(pickup_x,player_x,0.2),lerp(pickup_y,player_y,0.2)
+
+		if is_bonus then
+			local flash,index=life%90<5,1
+			for src in all(flash and split"1,2,3,4,5,6,7" or split"1,2,3") do 
+				pal(src,flash and 7 or pickup_colours[bonus_type+1][index]) 
+				index+=1
+			end
+		end
+		sspr_anim(visual_anim,pickup_x,pickup_y,pickup.t)
+		if(is_bonus)allpal()
+
+		::continue::
+		]]--
 	end
-	sspr_anim(visual_anim,pickup_x,pickup_y,pickup.t)
-	if(is_bonus)allpal()
+
+	memcpy(0,-0x4000,0x2000)
 end
 
--- _multi is the optional capped multipler
--- coins cap out at 100x 
-function give_score(value, multiplier)
-	-- score+=_amount*(combo_num==0 and 1 or combo_num\2) -- tokens
-	--limit of 99 999 999
-	local mult=multiplier or max(.25*combo_num^1.25,1)
-	local value=value*mult
+-- is_true means score added is the same number 
+	-- i.e no multiplier
+
+-- limit of 99 999 999 
+	-- means 999,999,990 in "visual" score
+function give_score(value, is_true)
+	if(not is_true) value*=max(.25*combo_num^1.25,1)	-- use the multipler if is_true is false
 
  	if score <152.58788 then
 		score+=value>>>16
