@@ -1,13 +1,12 @@
 
 debug,debug_time="",0
-draw_hitboxes=false
 poke(0x5f2e,1) -- keeps the colours on quit
 
 
 function debug_hitboxes()
 	
 	-- player col , pul col , enem col , bul col
-	local plcol,pulcol,encol,bulcol=10,11,10,11
+	local plcol,pulcol,encol,bulcol=10,11,10,14
 
 	if(t\4%2==0)draw_hitbox(player_x, player_y, player.hb, plcol)
 

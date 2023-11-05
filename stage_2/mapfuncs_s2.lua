@@ -135,7 +135,6 @@ function upd_enem(_enemy)
 	_enemy.x,_enemy.y=_enemy.ox+_enemy.sx,_enemy.oy+_enemy.sy
 
 	for anchor in all(_enemy.anchors) do 	-- add all of these guys to a list , so that you can draw them last
-		add(anchors,anchor)
 		anchor.sx,anchor.sy=_enemy.x,_enemy.y
 	end
 
@@ -187,5 +186,10 @@ function drw_enem(e)
 
 	
 	if(e.flash>-1)allpal()e.flash-=1
+
 	if(e.anchor and e.anchor.flash>0)allpal()
+
+	for anchor in all(e.anchors) do 
+		drw_enem(anchor)
+	end
 end

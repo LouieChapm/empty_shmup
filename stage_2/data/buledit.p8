@@ -41,7 +41,8 @@ helpers={split"none",split"spd mult,bullet index,bullet col,filter ref",split"re
 
 
 function _init()
-	cartdata"kalikan_buledit_2"
+	cartdata"kalikan_buledit"
+	if(dget(0)==0)dset(0,1)
 
 	t=0
 	temp=""
@@ -65,7 +66,7 @@ function _init()
 
         mode="select",
 
-        lib_index=1,
+        lib_index=dget(0),
     }
 
     enem={
@@ -105,6 +106,8 @@ end
 
 function _update60()
 	t+=1
+
+	nav.lib_index = dget(0)
 
     find_data_type()
 
@@ -168,7 +171,9 @@ function update_input()
             if(btnp(⬅️))lib_ind-=1
             if(btnp(➡️))lib_ind+=1
 
-            nav.lib_index=(lib_ind-1)%#bul_library+1
+			dset(0,(lib_ind-1)%#bul_library+1)
+
+            -- nav.lib_index=(lib_ind-1)%#bul_library+1
         else
             if(btnp(⬅️))nav.hori-=1
             if(btnp(➡️))nav.hori+=1

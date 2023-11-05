@@ -52,7 +52,7 @@ dont_fire=true
 max_rank=-1
 
 function _init()
-	cartdata"kalikan_mapedit_2"
+	cartdata"kalikan_mapedit"
 
 	t=0
 
