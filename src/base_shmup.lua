@@ -13,7 +13,9 @@ end
 --lint: func::_init
 function init_baseshmup(_enemy_data)
 	-- copy over the map data from the menu cart
-	reload(-0x2000,0,0x2000,"../kalikan_spritesheet.p8")	-- load persistent spritesheet from "menu"
+	-- can delete this when I've figured out a solution
+	if(peek(-0x2000)~=255)reload(-0x2000,0,0x2000,"../kalikan_spritesheet.p8")	-- load persistent spritesheet from "menu"
+	reload(-0x2000,0,0x2000,"../kalikan_spritesheet.p8")
 	memcpy(-0x4000,0,0x2000)										-- save spritesheet to upper mem
 
 	--[[
@@ -244,9 +246,12 @@ end
 function kill_enem(_enemy)
 	if(_enemy.exp>=0)new_explosion(_enemy.x,_enemy.y,_enemy.exp)
 
-	spawn_pickup(_enemy.x,_enemy.y,_enemy.coin_value,1.5)
+	local values = split(_enemy.coin_value,":")
+	for i=1,#values do
+		spawn_pickup(_enemy.x,_enemy.y,values[i],1.5,i)
+	end
 	
-	give_score(_enemy.value*(max_rank<0 and 1 or .8))
+	give_score(_enemy.value)
 
 	local is_elite=_enemy.elite
 	combo_num+=is_elite and 3 or 1
@@ -257,6 +262,8 @@ function kill_enem(_enemy)
 	delete_enem(_enemy)
 end
 
+-- tokens
+-- why does this exist ?
 function enem_sub_health(_enemy)
 	local deathmode,ex,ey,parent=_enemy.deathmode,_enemy.x,_enemy.y,_enemy.anchor
 	if deathmode==1 then
@@ -273,7 +280,6 @@ function enem_sub_health(_enemy)
 	else
 		kill_enem(_enemy)
 	end
-	
 end
 
 
@@ -363,6 +369,7 @@ end
 
 ------------------------------- pickups
 
+-- tokens
 function spawn_pickup(_originx,_originy,_amount,_speed,_type)
 	for _=1,_amount or 1 do
 		add(pickups,{
@@ -376,25 +383,30 @@ function spawn_pickup(_originx,_originy,_amount,_speed,_type)
 			spd=rnd(_speed) or .5,
 
 			t=t,
-			life=0,
+			life=eqrnd"10",
 			type=_type or 1,
 		})
 	end
 end
 
-pickup_sprites = split"17"
+pickup_sprites = split"18,19,20,17"
+pickup_values = split"50,100,500,1600"
 function drw_pickups()
 	memcpy(0,-0x2000,0x2000)
 
 	for pickup in all(pickups) do 
-
-		-- delete these
-		local y_spd = .35
-		local collect_range = 35
-		-- delete these
+		pickup.life+=1
 
 		local pickup_x,pickup_y=pickup.x+pickup.ox,pickup.y+pickup.oy
 		local dist=sqrt(abs(pickup_x-player_x)^2+abs(pickup_y-player_y)^2)
+
+		local type = pickup.type
+		
+		-- delete these
+		local y_spd = .35
+		local collect_range = type==4 and 20 or 30
+		-- delete these
+
 
 		pickup.x+=sin(pickup.dir)*pickup.spd
 		pickup.y+=cos(pickup.dir)*pickup.spd+y_spd
@@ -402,7 +414,7 @@ function drw_pickups()
 
 		-- check if the pickup should be magnetised
 			-- break the follow if the player is respawning
-		if(player_lerp_delay<=0 and dist<collect_range)pickup.seek,pickup.dont_wave,pickup.ox,pickup.oy=true,true,0,0
+		if(player_lerp_delay<=0 and pickup.life>15 and dist<collect_range)pickup.seek,pickup.dont_wave,pickup.ox,pickup.oy=true,true,0,0
 		
 		-- actual pickup magnet code
 		if(pickup.seek)pickup.x,pickup.y=lerp(pickup_x,player_x,0.2),lerp(pickup_y,player_y,0.2)
@@ -412,12 +424,15 @@ function drw_pickups()
 			spawn_oneshot(15,3,pickup_x,pickup_y)
 			del(pickups,pickup)
 
-			local value = 100
+			local value = pickup_values[type]
 			give_score(value,true)
-			new_text(pickup_x,pickup_y,value .. "0",45,true)
+			new_text(pickup_x,pickup_y + eqrnd"3",value .. "0",15 + 20*type,type~=4)
 		end
 
-		sspr_anim(pickup_sprites[1],pickup_x,pickup_y,pickup.t)
+
+		if(pickup.life<20 and t%8<2)goto continue		-- tokens : optional could remove
+		sspr_anim(pickup_sprites[type],pickup_x,pickup_y,pickup.t)
+		::continue::
 
 		--[[
 		local pickup_x,pickup_y=pickup.x+pickup.ox,pickup.y+pickup.oy
@@ -516,7 +531,7 @@ end
 -- limit of 99 999 999 
 	-- means 999,999,990 in "visual" score
 function give_score(value, is_true)
-	if(not is_true) value*=max(.25*combo_num^1.25,1)	-- use the multipler if is_true is false
+	if(not is_true)value*=max(.25*combo_num^1.25,1)	-- use the multipler if is_true is false
 
  	if score <152.58788 then
 		score+=value>>>16

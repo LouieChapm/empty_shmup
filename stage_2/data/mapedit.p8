@@ -343,7 +343,7 @@ end
 
 function drw_dbox()
 	local new_inf_num=#new_info+1
-	local x,y,w,h=90,40,30,new_inf_num*7+2
+	local x,y,w,h=80,65,43,new_inf_num*7+2
 	rrectfill(x,y+1,w,h-1,1)
 	
 	rrectfill(x+1,y+(new_sel_index-1)*7+2,w-2,6,0)

@@ -47,7 +47,7 @@ function prepare_spawn(_data)
 	if #tostr(_data[6])>1 then
 		local limit,rate,offset_x,offset_y=unpack(split(_data[6],":"))
 		local ox,oy=offset_x or 0,offset_y or 0
-		for i=1,limit do
+		for i=1,limit-1 do
 			add(map_spawnpreps,{i*rate + time_offset,map_nextspawn,ox*i,oy*i,ground_data})
 		end
 	end
