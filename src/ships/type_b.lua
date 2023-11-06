@@ -30,6 +30,8 @@ function init_player()
 
 	save("speeda,speedb,psp,pr8,plm,ps_laser_dur,ps_laser_length,ps_laser_dlength,ps_laser_maxlength,olm,ps_maxvol,ps_minimum_volley_trigger,ps_volley_count","1.8,0.8,5,3,30,0,0,1.05,10,3,6,3,0")
 
+	b_sprite_colour = parse_data"10,11,12,3|0,1,2,3|0,8,9,15|14,4,5,6"	-- changed depending on player
+	
 	-- player shoot offset , player_shoot direction , player_shoot direction 2
 	formation_a=parse_data"-14,7|14,7"
 	psoff,psdir=unpack(parse_data"-4,-2,4,-2|.49,.51")

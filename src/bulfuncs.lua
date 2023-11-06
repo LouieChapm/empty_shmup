@@ -16,7 +16,6 @@ b_sprite_xstart = split"0,8,15,23,31,38,48,56,61"
 b_sprite_aspeed = 4
 
 b_sprite_curpal = -1
-b_sprite_colour = parse_data"10,11,12,3|0,8,9,15|0,1,2,3|14,4,5,6"	-- changed depending on player
 
 bul_hitboxes = parse_data("-2,-2,4,4|-1,-1,3,2|-1,-1,4,4|-1,-1,4,4|-1,-2,3,5|-2,-2,6,6|-1,-1,4,4|-1,-1,3,3|-1,-1,3,3")
 

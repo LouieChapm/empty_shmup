@@ -31,6 +31,8 @@ function init_player()
 
 	save("speeda,speedb,psp,pr8,plm,olm,ps_maxvol,ps_minimum_volley_trigger,ps_volley_count","2.2,1.5,5,2,30,3,6,3,0")
 
+	b_sprite_colour = parse_data"10,11,12,3|0,1,2,3|0,8,9,15|14,4,5,6"	-- changed depending on player
+	
 	-- player shoot offset , player_shoot direction , player_shoot direction 2
 	psoff,psdir=unpack(parse_data"0,-3,-4,-1,5,-1|.5,.49,.51")
 
@@ -124,7 +126,7 @@ function player_hurt(_source)
 			spawn_oneshot(15,3, _source.x, _source.y + eqrnd"2")
 			stored_count+=1
 
-			combo_num += 3
+			-- combo_num += 3
 
 			del(buls,_source)
 		end

@@ -172,6 +172,8 @@ end
 
 -- draw a single enemy
 function drw_enem(e)
+	if(not draw_ground_enemies and e.ground_data or draw_ground_enemies and not e.ground_data)return
+
 	if(e.disabled and global_flash)return
 	local flash=e.flash>0 or e.anchor and e.anchor.flash>0
 	if(flash and t%4<2)allpal(9)

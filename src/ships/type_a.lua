@@ -26,10 +26,13 @@
 
 ]]
 
+
 function init_player()
 	ship_type = 0
 
 	save("speeda,speedb,psp,pr8,plm,olm,stance_change_treshold,opt_x,opt_y,time_in_stance_b,ps_maxvol,ps_minimum_volley_trigger,ps_volley_count,jump_frames,time_in_stance_a,player_shot_pause","1.6,1.6,5,5,30,5,10,64,164,0,6,3,0,5,0,0")
+
+	b_sprite_colour = parse_data"10,11,12,3|0,1,2,3|0,8,9,15|14,4,5,6"	-- changed depending on player
 
 	-- player shoot data
 	psoff,psdir=unpack(parse_data"-4,-2,4,-2|.5,.5")
@@ -300,7 +303,7 @@ function player_movement()
 		-- add data back to table for niceties
 		player.x,player.y=player_x,player_y
 
-		if(prev_stance!=target_stance and target_stance==1)opt_x,opt_y,player_shot_pause,draw_particles_above=delx,dely,30,15
+		if(prev_stance!=target_stance and target_stance==1)opt_x,opt_y,player_shot_pause,draw_particles_above=delx,dely,30,25
 	end
 
 	-- delayed x/y

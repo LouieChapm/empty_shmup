@@ -15,7 +15,7 @@ function init_baseshmup(_enemy_data)
 	-- copy over the map data from the menu cart
 	-- can delete this when I've figured out a solution
 	if(peek(-0x2000)~=255)reload(-0x2000,0,0x2000,"../kalikan_spritesheet.p8")	-- load persistent spritesheet from "menu"
-	reload(-0x2000,0,0x2000,"../kalikan_spritesheet.p8")
+	-- reload(-0x2000,0,0x2000,"../kalikan_spritesheet.p8")
 	memcpy(-0x4000,0,0x2000)										-- save spritesheet to upper mem
 
 	--[[
@@ -349,6 +349,7 @@ end
 
 function upd_turret(_data)	
 	local enem,index,rate,dir,ox,oy,rox=unpack(_data)
+	
 	
 	if(boss_active)goto skip
 	if(enem.y>90 or enem.y<5)return

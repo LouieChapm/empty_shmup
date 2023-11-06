@@ -45,6 +45,7 @@ end
 
 function _init()
 	cartdata"kalikan_pathedit"
+	b_sprite_colour = parse_data"10,11,12,3|0,1,2,3|0,8,9,15|14,4,5,6"
 
 	t=0
 	temp=""

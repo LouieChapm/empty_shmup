@@ -10,7 +10,7 @@ fmenu_cart_address="../menu/shmup_menu.p8"
 #include data/inf_enems.txt
 
 #include ../src/base_shmup.lua
-#include ../src/ships/type_b.lua
+#include ../src/ships/type_c.lua
 
 #include mapfuncs_s2.lua
 #include ../src/sprfuncs.lua
@@ -61,13 +61,13 @@ function _init()
 			0..1:	direction decimal sin/cos
 			?:		controlled via unit brain 
 	]]
-	turret_data=parse_data"1,56,-1,0,0,-5"
+	turret_data=parse_data"7,60,-1,0,0,60"
 	
 	speed_changes=parse_data"1600,.01|1800,.4|30000,<< should never reach this"
 	
 	map_segments=split"0,1,0,0,1,0,0,1, 0,0,1,0,0,1,0,0,1, 0,0,1,0,0,1,0,0,1, 0,0,1,0,0,1,0,0,1, 0,0,1,0,0,1,0,0,1"
 
-	save("map_progress,map_speed,map_speed_target","128,.6,.6")
+	save("map_progress,map_speed,map_speed_target","128,.4,.4")
 end
 
 function _update60()
@@ -145,9 +145,12 @@ function _draw()
 
 	if(draw_particles_above<0)foreach(parts,drw_part)
 
+	draw_ground_enemies = true
+	foreach(enems,drw_enem)						-- draw the enemies
+
 	drw_pickups()
-	
-	drw_ground_enems=false
+
+	draw_ground_enemies = false
 	foreach(enems,drw_enem)						-- draw the enemies
 
 	draw_player()
@@ -338,7 +341,7 @@ fade_table=parse_data([[2,2,132,5,133,130
 
 
 gate_closed = 0
-gate_speed = .6
+gate_speed = .4
 function draw_gate()
 	local offset = 60 * gate_closed
 

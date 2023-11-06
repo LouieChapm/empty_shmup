@@ -7,12 +7,12 @@ __lua__
 -- @0xffb3 on the bird app
 
 --[[
-    TOKENS
-    2374 pre changing
-    2296 using unpack
-    2276 changing s.wx to swx and so on...
-    2267 changing filter to unpack
-]]--
+	BUGS: 
+		If you submit bad data it instantly crashes
+
+	QOL: 
+		Maybe pressing enter could shoot , so I can just use the keyboard
+]]
 
 bg_col=8
 ln_col=0
@@ -42,7 +42,9 @@ helpers={split"none",split"spd mult,bullet index,bullet col,filter ref",split"re
 
 function _init()
 	cartdata"kalikan_buledit"
-	if(dget(0)==0)dset(0,1)
+
+	b_sprite_colour = parse_data"10,11,12,3|0,1,2,3|0,8,9,15|14,4,5,6"
+	if(peek(-0x2000)~=255)reload(-0x2000,0,0x2000,"../../kalikan_spritesheet.p8")
 
 	t=0
 	temp=""
@@ -66,14 +68,15 @@ function _init()
 
         mode="select",
 
-        lib_index=dget(0),
+        lib_index=mid(1,dget(0),#bul_library-1)
     }
+	dset(0,nav.lib_index)
 
     enem={
-        x=64,
-        y=64,
+        x=80,
+        y=30,
     }
-    mouse_input=0
+
 
     player={
         x=64,
@@ -82,10 +85,12 @@ function _init()
 
 	poke(0x5f2d, 1) -- keyboard access
 	
+	init_mouseX,init_mouseY = stat(32),stat(33)
+	mouse_moved = false
+    mouse_input=0
+
 	pal({[0]=2,4,9,10,5,13,6,7,136,8,3,139,138,130,133,14},1)
 	palt(0,false)
-
-	
 
 	cscroll=0
 end
@@ -160,9 +165,17 @@ function update_input()
     local had_input=stat(30)
 	local char = had_input and stat(31) or nil
 
+	enter_pressed = false
+
     if(char=="\t")show_ui = not show_ui
 
     if nav.mode=="select" then
+		if char=="\b" then 
+			bul_library[nav.lib_index]={1}
+			find_data_type()
+			return
+		end
+
 		if(btnp(⬆️))nav.vert-=1
 		if(btnp(⬇️))nav.vert+=1
 
@@ -197,6 +210,8 @@ function update_input()
                 new_command_mode=0
             end
 		end
+
+		if(char==" ")enter_pressed = true
     elseif nav.mode=="change" then
         if btnp(➡️) then
             new_command_mode+=1
@@ -235,11 +250,19 @@ function update_input()
 end
 
 function update_mouse_input()
-    enem.x=stat(32) or 64
-    enem.y=stat(33) or 64
+	if not mouse_moved then 
+		if stat(32)~=init_mouseX or stat(33)~=init_mouseY then 
+			if(stat(32)>0 and stat(32)<129 and stat(33)>0 and stat(33)<129)mouse_moved = true
+		end
+	end
+
+	if mouse_moved then
+		enem.x=stat(32)
+		enem.y=stat(33)
+	end
 
     local upd_mouse=stat(34)
-    if mouse_input!=upd_mouse and upd_mouse==1 then
+    if mouse_input!=upd_mouse and upd_mouse==1 or enter_pressed then
         create_spawner((nav.lib_index)*-1, enem, -1)
     end
     mouse_input=upd_mouse
