@@ -85,7 +85,7 @@ function spawn_enem(_path, _type, _spawn_x, _spawn_y, _ox, _oy, _ground_data)
 
 	-- custom enemy spawn info vvvv
 	-- if(_type==5)active=false spawn_anchor(_ENV,3,-3,-2)spawn_anchor(_ENV,4,3,-2)  -- _ENV is self not global
-	if(_type==5)add_turret(_ENV,1)
+	if(_type==3)add_turret(_ENV,1)
 
 	return add(enems,_ENV)
 end
@@ -160,12 +160,6 @@ function upd_brain(enemy)
 		local visible=(enemy.direction\.0625)-9
 		if(visible<0)visible=abs(visible+2)
 		enemy.s=frames[mid(1,visible,5)]
-	elseif index==7 then 
-		if(enemy.flash>=0)enemy.counter = 10
-		enemy.counter-=1
-
-		enemy.s = 116
-		if(enemy.counter>0 and t%2<2) enemy.s = 115 
 	end
 end
 
