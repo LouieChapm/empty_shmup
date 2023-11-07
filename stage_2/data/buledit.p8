@@ -330,7 +330,7 @@ function get_player_dir(_x,_y)
 end
 
 function printbg(text,x,y,c)
-	print("\#1"..tostring(text),x,y,c or 7)
+	print("\#e"..tostring(text),x,y,c or 7)
 end
 
 function parse_data(_data)

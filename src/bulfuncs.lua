@@ -21,7 +21,6 @@ bul_hitboxes = parse_data("-2,-2,4,4|-1,-1,3,2|-1,-1,4,4|-1,-1,4,4|-1,-2,3,5|-2,
 
 function drw_buls()
 	-- reload(0,0x2000,0x800)
-
 	memcpy(0,-0x2000,0x2000)
 	-- reload(0,0,0x2000,"../../kalikan_spritesheet.p8")
 

@@ -10,7 +10,7 @@ fmenu_cart_address="../menu/shmup_menu.p8"
 #include data/inf_enems.txt
 
 #include ../src/base_shmup.lua
-#include ../src/ships/type_c.lua
+#include ../src/ships/type_b.lua
 
 #include mapfuncs_s2.lua
 #include ../src/sprfuncs.lua

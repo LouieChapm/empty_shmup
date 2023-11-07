@@ -39,12 +39,12 @@ new_reset = false
 function my_menu_item(b)
     if(b&1 > 0) game_rank=mid(1,game_rank-1,3) 
     if(b&2 > 0) game_rank=mid(1,game_rank+1,3)
-	menuitem(_,"⬅️ rank:"..game_rank.." ➡️")
     return true -- stay open
 end
 
 function _init()
 	cartdata"kalikan_pathedit"
+	if(peek(-0x2000)~=255)reload(-0x2000,0,0x2000,"../../kalikan_spritesheet.p8")
 	b_sprite_colour = parse_data"10,11,12,3|0,1,2,3|0,8,9,15|14,4,5,6"
 
 	t=0
@@ -484,7 +484,20 @@ function draw_module(_text,_x,_y,_is_on)
 end
 
 function printbg(text,x,y,c)
-	print("\#1"..tostring(text),x,y,c or 7)
+	print("\#e"..tostring(text),x,y,c or 7)
+end
+
+function draw_crumbs()
+	local list=do_record and crumbs or crumbs_list[nav.lib_index]
+	
+	if(#list<=1)return
+
+	for crumb in all(list) do
+		local x,y=unpack(crumb)
+		x+=spawn_x
+		y+=spawn_y
+		rect(x,y,x+1,y+1,12)
+	end
 end
 
 function draw_bg()
@@ -505,18 +518,7 @@ function draw_bg()
 end
 
 
-function draw_crumbs()
-	local list=do_record and crumbs or crumbs_list[nav.lib_index]
-	
-	if(#list<=1)return
 
-	for crumb in all(list) do
-		local x,y=unpack(crumb)
-		x+=spawn_x
-		y+=spawn_y
-		rect(x,y,x+1,y+1,2)
-	end
-end
 
 
 -->8
