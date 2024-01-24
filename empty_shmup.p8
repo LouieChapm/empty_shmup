@@ -52,6 +52,8 @@ function _init()
 
 	game_freeze_length = 0
 	anim=0
+
+	radial_selection,radial_target=0,0
 end
 
 function _update60()
@@ -63,22 +65,16 @@ function _update60()
 	game_freeze_length = game_freeze and game_freeze_length + 1 or 0
 
 	-- means roughly 1/6 speed
-	local freeze_rate = 6
+	local freeze_rate = 10
 	delta_time = 1.0
 	if game_freeze then 
 		radial_open_prog = min(game_freeze_length*.15,1)
 		delta_time = 1/freeze_rate
 
-		anim += 1/freeze_rate
-
-		-- slow motion bit
-		if t%freeze_rate!=0 then 
-			return
-		end
-	else
-		anim += 1
+		anim += delta_time
 	end
 
+	anim += delta_time
 
 	upd_mapfuncs()										-- handles spawning of enemies
 	upd_bulfuncs()										-- handles the spawning of patterns , and also updates projectiles
@@ -127,14 +123,12 @@ function _draw()
 	if(draw_hitboxes)debug_hitboxes()
 
 	if game_freeze then 
-		local rad = easeinquad(radial_open_prog)
-
-		draw_radial_menu(rad)
+		radial_menu()
 	end
 
 	print(debug, cam_x+2, 30,7)
 
-	print(player_form,cam_x+2,121,7)
+	--print(player_form,cam_x+2,121,7)
 end
 
 function easeinquad(t)
@@ -155,6 +149,35 @@ function gen_sqrt_lut()
 	end
 end
 
+function radial_menu()
+	local rad = easeinquad(radial_open_prog)
+
+	radial_selection = circular_lerp(radial_selection%1,radial_target,.2)
+	
+	local bitwise_input = btn()&0b001111	-- get bitwise input and filter out "o" and "x"
+	local target = split"-1,.5,0,-1,.25,.375,.125,.25,.75,.625,.875,.75,-1,.5,0,-1"[bitwise_input+1]
+	
+	if(target~=-1)radial_target = target
+
+
+	draw_radial_menu(rad)
+end
+
+function circular_lerp(a, b, t)
+    local angle_diff = b - a
+
+    -- Ensure the interpolation travels the shortest distance around the circle
+    if abs(angle_diff) > 0.5 then
+        if angle_diff > 0 then
+            b = b - 1
+        else
+            b = b + 1
+        end
+    end
+
+    return a + t * (b - a)
+end
+
 function draw_radial_menu(open_perc)
 	local old_cam=cam_x
 
@@ -165,6 +188,19 @@ function draw_radial_menu(open_perc)
 
 	draw_ui_shadow_circ(max_rad, 80)
 
+	local ox,oy = 64,64
+	local scale1,scale2 = 20*open_perc,22*open_perc
+
+	local freq = .003
+	local width = .1
+	local colour = min(radial_selection+.125,3)\.25
+	for i=-width, width, freq do 
+		local x1,y1 = cos(radial_selection+i)*scale1+ox,sin(radial_selection+i)*scale1+oy
+		local x2,y2 = cos(radial_selection+i)*scale2+ox,sin(radial_selection+i)*scale2+oy
+		line(x1,y1,x2,y2,colour-1)
+	end
+	debug = colour .. "\n" .. radial_selection
+
 	camera(cam_x)
 end
 
@@ -173,7 +209,7 @@ function draw_ui_shadow_circ(open_t, radius)
 
 	-- radius and position
 	local r = open_t * radius * 1.42
-	px = 64
+	px = 65
 	py = 64
 	
 	poke(0x5f54, 0x60) -- switch spritesheet to screen 

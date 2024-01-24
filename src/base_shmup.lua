@@ -195,7 +195,7 @@ function upd_enem(_enemy)
 		return
 	end
 
-	_enemy.t+=1
+	_enemy.t+=delta_time
 
 	if(_enemy.lerpperc>=0)upd_lerp(_enemy)
 	if(_enemy.path)follow_path(_enemy)
@@ -275,7 +275,7 @@ end
 function enem_path_shoot(_enemy)
 	-- for shots todo move to its own function
 	if _enemy.shot_index*4<=#shot_lib[_enemy.path_index] then
-		if _enemy.t==shot_lib[_enemy.path_index][_enemy.shot_index*4-3] then
+		if _enemy.t>=shot_lib[_enemy.path_index][_enemy.shot_index*4-3] then
 			local data=shot_lib[_enemy.path_index]
 			local t=_enemy.shot_index*4-3
 
@@ -289,7 +289,7 @@ end
 -- put in update , used for enemy "ai"
 function follow_path(_enemy)
 	local path,rate = _enemy.path,1/_enemy.depth
-	_enemy.perc+=rate
+	_enemy.perc+=rate * delta_time
 
 	local step,tlerp=(_enemy.perc\1)%(#path-1)+1,_enemy.perc%1
 

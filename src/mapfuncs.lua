@@ -8,7 +8,7 @@ function init_mapfuncs(_spawns,_crumbs,_shots)
 end
 
 function upd_mapfuncs()
-    if(not pause_timeline)map_timeline+=1 -- iterate level progress
+    if(not pause_timeline)map_timeline+=delta_time -- iterate level progress
 
     while map_nextspawn and map_timeline>tonum(map_nextspawn[1]) do
         prepare_spawn(map_nextspawn)
@@ -40,6 +40,6 @@ function check_spawn(_spawn)
 		spawn_enem(path,unit,sx + offset_x,sy + offset_y) -- from base_shmup -- might move :/
 		del(map_spawnpreps,_spawn)
 	else
-		_spawn[1]-=1
+		_spawn[1]-=delta_time
 	end
 end

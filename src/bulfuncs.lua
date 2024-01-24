@@ -25,11 +25,11 @@ end
 
 -- bullet upd/draw
 function upd_bul(bul)
-    bul.life+=1
+    bul.life+=delta_time
 
     -- move ya boy
-    bul.wx+=cos(bul.dir)*0.5*bul.spd
-    bul.wy+=sin(bul.dir)*0.5*bul.spd
+    bul.wx+=cos(bul.dir)*0.5*bul.spd * delta_time
+    bul.wy+=sin(bul.dir)*0.5*bul.spd * delta_time
 
     if bul.circ_data then   
         local cd=bul.circ_data
@@ -43,9 +43,6 @@ function upd_bul(bul)
     bul.x,bul.y=bul.wx+bul.ox,bul.wy+bul.oy
 
     if(abs(bul.y-64)>=80 or abs(bul.x-64)>=90)del(buls,bul)
-
-    -- TODO : check collisions
-    -- if(col(player,bul))sfx(62)
 end
 
 
