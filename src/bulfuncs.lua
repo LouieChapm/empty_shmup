@@ -9,94 +9,18 @@ function upd_bulfuncs()
 	foreach(spawners,upd_spawner)
 end
 
-b_sprite_scales = parse_data"8,8|7,6|8,8|8,8|7,7|10,10|8,8|5,5|5,5"
-b_sprite_offset = parse_data"-4,-4|-3,-3|-3,-3|-3,-3|-3,-3|-4,-4|-3,-3|-2,-2|-2,-2"
-b_sprite_xstart = split"0,8,15,23,31,38,48,56,61"
-
-b_sprite_aspeed = 4
-
-b_sprite_curpal = -1
-
+b_sprite_aspeed = 6
 bul_hitboxes = parse_data("-2,-2,4,4|-1,-1,3,2|-1,-1,4,4|-1,-1,4,4|-1,-2,3,5|-2,-2,6,6|-1,-1,4,4|-1,-1,3,3|-1,-1,3,3")
 
 function drw_buls()
-	-- reload(0,0x2000,0x800)
-	memcpy(0,-0x2000,0x2000)
-	-- reload(0,0,0x2000,"../../kalikan_spritesheet.p8")
-
-	-- sspr(0,0,128,128,0,0)
-	-- cstore()
-
-	-- cstore()
-	-- stop()
-
-	-- bul.anim 		== is now bullet type
-	-- bul.anim_speed	== is now bullet colour
 	palt(15,true)
 
 	for bul in all(buls) do
-		-- change the colour of the bullet
-		if b_sprite_curpal~=bul.anim_speed then 
-			for i=0,3 do 
-				pal(i,b_sprite_colour[bul.anim_speed][i+1])
-			end
-			b_sprite_curpal = bul.anim_speed
-		end
-
-		local num = (bul.life\b_sprite_aspeed)%4
-
-		local ox,oy = unpack(b_sprite_offset[bul.anim])
-
-		local sw,sh = unpack(b_sprite_scales[bul.anim])
-
-		sspr(b_sprite_xstart[bul.anim],b_sprite_scales[bul.anim][2]*num ,sw,sh,bul.x + ox,bul.y + oy)
+		sspr_anim(10, bul.x, bul.y, bul.spawn, b_sprite_aspeed)
 	end
 
 	palt(15,false)
-
-	b_sprite_curpal = -1
-	allpal()
-
-	memcpy(0,-0x4000,0x2000)
 end
-
---[[
-function drw_bulfunc(bul)
-	sspr_anim(bul.anim, bul.x,bul.y, bul.spawn, bul.anim_speed)
-end
-]]--
-
--- filters
-function iterate_filters(bul)
- 	for filter in all(bul.filters) do
-		local fstart,fend=filter.f_start,filter.f_end
-		if bul.life>fstart then
-			local ftype=filter.type
-			if ftype=="fspeed" then
-				bul.spd = bul.spd<0.1 and 0 or bul.spd*filter.rate
-			end
-		end
-		if(fend!=-1 and bul.life>fend)del(bul.filters,filter)
- 	end
-end
-
-function do_filter(bul, ref)
-	local type,d2,d3,d4,d5,d6=unpack(bul_library[ref])
-	
-	local new_filter={
-		f_start=d3,
-		f_end=-1,
-	}
-
-	new_filter.type=type
-	if type == "fspeed" then
-		new_filter.rate,new_filter.f_end=d5,d4
-		if(d2!=0)do_filter(bul,d2)
-	end
-
-	add(bul.filters,new_filter)
-end
-
 
 
 -- bullet upd/draw
@@ -106,8 +30,6 @@ function upd_bul(bul)
     -- move ya boy
     bul.wx+=cos(bul.dir)*0.5*bul.spd
     bul.wy+=sin(bul.dir)*0.5*bul.spd
-
-    iterate_filters(bul)
 
     if bul.circ_data then   
         local cd=bul.circ_data
@@ -129,7 +51,7 @@ end
 
 -->8
 -- tool
-function spawn_bul(_origin_x,_origin_y,_type,_dir,_speed,_ani_speed)
+function spawn_bul(_origin_x, _origin_y, _type, _dir, _speed)
     -- creates bullet at location , of type , with direction / speed , and set animation speed
 	local bul={
 
@@ -144,15 +66,12 @@ function spawn_bul(_origin_x,_origin_y,_type,_dir,_speed,_ani_speed)
 		hb=gen_hitbox(_type, bul_hitboxes),
 
 		anim=_type, -- animation reference || CANNOT be used with single sprites as of now
-		anim_speed=_ani_speed,
 
 		dir=_dir==-1 and get_player_dir(_origin_x,_origin_y) or _dir, -- if the bul is spawned and still has a direction of -1 , then it is set to the player direction
 		spd=_speed,
 
 		spawn=t, -- frame it was spawned on
 		life=0,  -- frames that it has been spawned for  -- probably could be condensed , but I can't be bothered
-  
-  		filters={},
 	}
 	add(buls,bul) -- add to list
 
@@ -209,7 +128,7 @@ function upd_spawner(s)
     local sdir,stime=s.dir,s.time
 
     if type=="sprite" then
-		local bul = spawn_bul(s.enemy.x + s.ox, s.enemy.y + s.oy, d3, sdir, d2*s.spd, d4)
+		local bul = spawn_bul(s.enemy.x + s.ox, s.enemy.y + s.oy, d3, sdir, d2*s.spd)
 		bul.life-=s.parent_origin_time-t
 		if(s.circ_data)bul.circ_data = s.circ_data
 		if(d5!=0)do_filter(bul,d5)

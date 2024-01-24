@@ -6,7 +6,14 @@ end
 -- special stuff
 function sspr_anim(_index, posx, posy, _offset, _speed)
     local frames,offset,speed = anim_library[_index],_offset or 0, _speed or 8
-    sspr_obj(frames[(t+offset)\speed%#frames+1], posx, posy)
+    
+	--freeze_rate = 6
+	--delta_time = 1.0
+	--if game_freeze then 
+
+	local anim = anim\1
+
+	sspr_obj(frames[(anim+offset)\speed%#frames+1], posx, posy)
 end
 
 function sspr_obj(_data, posx, posy)

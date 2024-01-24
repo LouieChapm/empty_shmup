@@ -1,6 +1,6 @@
 --lint: func::_init
 function init_expfuncs()
-	parts,exp_fadeout,exp_default,text_effect_pause,exp_queue={},parse_data"222,224|221,222|221",parse_data"115|50,55|35,50|18,35|1,18|213",0,{}
+	parts,exp_fadeout,exp_default,exp_queue={},parse_data"222,224|221,222|221",parse_data"115|50,55|35,50|18,35|1,18|213",{}
 end
 
 -- time, x offset, y offset
@@ -13,7 +13,7 @@ end
 
 function upd_expqueue(exp_item)
 	local time,x,y,size=unpack(exp_item)
-	exp_item[1]-=1
+	exp_item[1]-=delta_time
 	if(time>0)return
 	new_explosion(x,y,size,false,5)
 	del(exp_queue,exp_item)
@@ -28,7 +28,7 @@ function drw_part(_p)
 	if(slow_motion and t%3!=0)func(_ENV)return
 	if(life==0)ox,oy=x,y
 
-	life+=1
+	life+=delta_time
 	if(life<0)return
 
 	local tospd=tospd or .1
@@ -36,9 +36,9 @@ function drw_part(_p)
 	if(torad)rad=lerp(rad,torad,toradspd or 0.5)
 
 	local vdrift=vdrift or .15
-	y-=vdrift
-	if(toy)toy-=vdrift
-	if(hdrift)x-=hdrift
+	y-=vdrift * delta_time
+	if(toy)toy-=vdrift * delta_time
+	if(hdrift)x-=hdrift * delta_time
 
 	func(_ENV)
 
@@ -61,19 +61,6 @@ function drw_part(_p)
 			del(parts,_ENV)
 		end
 	end
-end
-
-function p_debris(data)
-	local ox,oy=data.x,data.y
-
-	data.hdrift*=.96
-	data.vdrift=max(data.vdrift*.95-.02,-1)
-
-	if(data.maxlife-data.life<15 and data.life%8<4)return
-
-	local type=data.type
-	if(type<0)pset(ox,oy,abs(type))return
-	sspr_anim(data.type,ox,oy)
 end
 
 function p_wave(data)
@@ -116,23 +103,6 @@ function pnew_circ(_x, _y, _spawn_offset, _maxage, _size)
 	end
 end
 
-function p_text(data)
-	local x,y,text,life=data.x,data.y,data.text,data.life
-	if(data.maxlife-life<15 and life%8<4)return
-
-	local ox=5-min(life*.5,5)
-	local col=life>10 and life<20 and 7 or 6
-
-	for slice=y\1,y+8 do
-		clip(0,slice,128,1)
-		local _x=x-ox
-		if(slice%2==0)_x+=ox*2
-		?text,_x,y,col
-	end
-
-	clip()
-end
-
 function new_basepart(_x,_y,_hdrift,_vdrift,_func,_maxlife)
 	return add(parts,
 	{
@@ -149,21 +119,7 @@ function new_basepart(_x,_y,_hdrift,_vdrift,_func,_maxlife)
 	})
 end
 
-function new_text(_originx, _originy, _text, _maxlife, _ignore_sometimes)
-	if(_ignore_sometimes and text_effect_pause>0)return
-	local part=new_basepart(_originx+5,_originy-3,0,.15,p_text,_maxlife)
-	part.text=_text
-
-	if(_ignore_sometimes)text_effect_pause=3
-end
-
-function new_debris(_originx,_originy,_speed,_maxlife,_shraptype)
-	local dir=rnd"1"	
-	local part=new_basepart(_originx,_originy,sin(dir)*_speed,cos(dir)*_speed,p_debris,rnd"60"\1)
-	part.type=_shraptype
-end
-
-function new_explosion(_originx,_originy,_size,_debris,_maxage)
+function new_explosion(_originx,_originy,_size,_maxage)
 	local originy,maxlife,size=_originy+eqrnd(3),_maxage or 20,_size or 0
 
 	sfx(rnd(split"56,57,58"),3)
@@ -177,11 +133,5 @@ function new_explosion(_originx,_originy,_size,_debris,_maxage)
 	
 	for i=0,1+size do
 		pnew_circ(_originx+eqrnd(1+i*6),originy-i*6,i,maxlife,size)
-	end
-
-	if(_debris==false)return
-
-	for _=1,rnd(2+size*5)\1 do
-		new_debris(_originx,originy,.5+rnd"1.5",60+eqrnd"30",rnd(split"9,9,10,10,10,10,10,11,11,11,11,11,-5,-5,-5,-4,-4,-6"))
 	end
 end
