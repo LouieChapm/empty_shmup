@@ -25,8 +25,8 @@ debug_time=0
 alphabet=split"a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,_" -- letters and underscore 
 numbers=split("0,1,2,3,4,5,6,7,8,9,-,.",",",false)
 
-helper_types=split"none,sprite,loop,burst,array,combo"
-helpers={split"none",split"spd mult,bullet type",split"reference,from,to,time add, dir add, spd add",split"reference,amount,rnd dir,rnd spd",split"reference,from,to,time add, dir add, spd add",split"ref 1,ref 2,ref 3"}
+helper_types=split"none,sprite,loop,burst,circ,array,fspeed,combo,ftarget,fspawn"
+helpers={split"none",split"spd mult,bullet radius,bullet col,filter ref",split"reference,from,to,time add, dir add, spd add",split"reference,amount,rnd dir,rnd spd", split"reference,amount,radius,rot speed,grow rate",split"reference,from,to,time add, dir add, spd add",split"chain ref,start,end,speed anim",split"ref 1,ref 2,ref 3",split"chain ref,start,rnd delay,dir,offset,speed",split"chain ref,start,pat reference,max spawns,spawn rate"}
 
 
 #include inf_patterns.txt
@@ -100,12 +100,18 @@ function find_data_type()
     if(data[1]=="sprite")data_type=2
     if(data[1]=="loop")data_type=3
     if(data[1]=="burst")data_type=4
-    if(data[1]=="array")data_type=5
-    if(data[1]=="combo")data_type=6
+    if(data[1]=="circ")data_type=5
+    if(data[1]=="array")data_type=6
+    if(data[1]=="fspeed")data_type=7
+    if(data[1]=="combo")data_type=8
+    if(data[1]=="ftarget")data_type=9
+    if(data[1]=="fspawn")data_type=10
 end
 
 function _update60()
 	t+=1
+
+	delta_time = 1
 
 	nav.lib_index = dget(0)
 

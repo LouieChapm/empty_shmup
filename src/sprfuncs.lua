@@ -23,7 +23,7 @@ function sspr_obj(_data, posx, posy)
     local sx,sy,sw,sh,ox,oy,transparent,mirror_mode,flip_h,stack=unpack(lib)
 
     if stack!=0 then
-        for i=1,3 do pal(i,7) end
+        for i=1,3 do pal(i,11) end
         palt(stack==1 and 3 or 2,true)
     end
     if transparent!=cur_transparent then

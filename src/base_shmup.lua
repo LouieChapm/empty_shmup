@@ -1,7 +1,5 @@
 
 
--- written by LokiStriker
--- this is nutty
 function save(_a,_b)
     local a,b=split(_a),split(_b)
     for i=1,#a do 
@@ -10,10 +8,34 @@ function save(_a,_b)
     end
 end
 
+function save2(str)
+	for kv in all(split(str)) do
+		local k,v=unpack(split(kv,"="))
+		_ENV[k]=v
+	end
+end
+
+-- makes a table from keys and vardics
+function make(_keys, ...)
+    local obj,vars = {},{...}
+    for k,v in ipairs(split(_keys)) do 
+        obj[v]=vars[k]
+    end
+	return setmetatable(obj,{__index=_ENV})
+end
+
+--merges two tables
+function merge(t1,t2)
+    for k,v in pairs(t2) do
+        t1[k]=v
+    end
+    return t1
+end
+
 --lint: func::_init
 function init_baseshmup(_enemy_data)									-- save spritesheet to upper mem
 	save("t,player_lerpx_1,player_lerpy_1,player_lerpx_2,player_lerpy_2,player_lerp_perc,player_lerp_speed,player_lerp_delay,player_lerp_type,shot_pause,draw_particles_above","0,64,150,63,95,0,2,0,easeout,0,-1")
-	save("score,lives,live_preview_offset,live_flash,pmuz,pause_combo,combo_num,combo_counter,combo_freeze,disable_timer,player_immune,player_flash,ps_held_prev,screen_flash,bnk,bnkspd,plast,op_perc","0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0.3,0,1")
+	save("score,lives,live_preview_offset,live_flash,pmuz,pause_combo,combo_num,combo_counter,combo_freeze,disable_timer,player_immune,player_flash,ps_held_prev,screen_flash,plast,op_perc","0,2,0,0,0,0,0,0,0,0,0,0,0,0.3,0,1")
 
 	hitboxes = parse_data"0,0,2,2|-3,-4,8,8|-2,-16,8,12"	-- this is the table that includes the hitboxes for enemies
 
@@ -125,7 +147,9 @@ end
 function allpal(_col)
 	for i=0,15 do
 		pal(i, _col or i)
+		palt(i,false)
 	end
+	cur_transparent = -1
 end
 
 
@@ -183,6 +207,9 @@ function spawn_enem(_path, _type, _spawn_x, _spawn_y, _ox, _oy)
 	s,health,hb,value=unpack(enemy_data[_type])
 	hb,active,type,sx,sy,ox,oy,x,y,t,shot_index,perc,flash,path_index,pathx,pathy,patterns,lerpperc,intropause=gen_hitbox(hb),true,_type,_spawn_x,_spawn_y,_ox or 0, _oy or 0,63,-18,0,1,0,0,_path,{},{},{},-1,0
 
+	origin_x = _spawn_x
+	mx,my = 0,0
+
 	if(_path)depth,path=gen_path(crumb_lib[_path])
 
 	return add(enems,_ENV)
@@ -208,13 +235,50 @@ function upd_enem(_enemy)
 	if(_enemy.path and player_lerp_delay<=0)enem_path_shoot(_enemy)
 end
 
+--direction for data
+function get_dir(x1,y1,x2,y2)
+	return atan2(x2-x1,y2-y1)
+end
+
 -- draw a single enemy
 function drw_enem(e)
 	if(e.disabled and global_flash)return
 	local flash=e.flash>0 or e.anchor and e.anchor.flash>0
 	if(flash and t%4<2)allpal(7)	
 
-	sspr_obj(e.s,e.sx+e.ox,e.sy+e.oy,e.t)
+	local x1 = e.x
+	local x2 = e.pathx[#e.pathx]
+
+	local dir = x1-x2 - e.origin_x
+
+	--sspr_obj(e.s,e.sx+e.ox,e.sy+e.oy,e.t)
+	allpal()
+	pal(14, t%16<8 and 0 or 8)
+	pal(15, t%16<4 and 0 or t%16>12 and 0 or 8)
+	palt(12,true)
+	pd_rotate(e.x+1,e.y+1,dir*-0.1,6,2.7,2.6,false,1)
+	allpal()
+
+	local dx,dy = e.mx,e.my
+	line(e.x,e.y,e.x + dx*10, e.y + dy*10, 11)
+
+	for i=-1,1,2 do
+		local x_position=e.x-i
+
+		if t%2==0 then 
+
+			if(dir>0 and i<0)x_position-=3
+			if(dir<0 and i>0)x_position+=3
+
+			new_dust(x_position+4,e.y+3)
+			new_dust(x_position-3,e.y+3)
+		end
+
+		if rnd"1"<.1 then 
+			new_dust(x_position,e.y,true)
+		end
+	end
+
 
 	if(e.flash>-1)allpal()e.flash-=1
 end
@@ -289,23 +353,42 @@ end
 -- put in update , used for enemy "ai"
 function follow_path(_enemy)
 	local path,rate = _enemy.path,1/_enemy.depth
-	_enemy.perc+=rate * delta_time
 
-	local step,tlerp=(_enemy.perc\1)%(#path-1)+1,_enemy.perc%1
-
-	local x,y=lerp(path[step].x,path[step+1].x,tlerp),lerp(path[step].y,path[step+1].y,tlerp)
-
-	add(_enemy.pathx,x)
-	if(#_enemy.pathx>2)deli(_enemy.pathx,1)
-	add(_enemy.pathy,y)
-	if(#_enemy.pathy>2)deli(_enemy.pathy,1)
-
-	_enemy.ox=avg(_enemy.pathx)
-	_enemy.oy=avg(_enemy.pathy)
 
 	-- reached the end of its path
-	if _enemy.perc>#path-1 then
-		delete_enem(_enemy)
+	if _enemy.perc>#path-2 then
+		_enemy.ox += _enemy.mx
+		_enemy.oy += _enemy.my
+
+		local lower_bound, upper_bound = -20,140
+
+		if _enemy.y < lower_bound or _enemy.y > upper_bound or _enemy.x < lower_bound or _enemy.x > upper_bound then 
+			delete_enem(_enemy)
+		end
+	else
+		-- if there's a path to follow
+
+		_enemy.perc+=rate * delta_time
+
+		local oldx,oldy = _enemy.ox,_enemy.oy
+
+		local step,tlerp=(_enemy.perc\1)%(#path-1)+1,_enemy.perc%1
+
+		local x,y=lerp(path[step].x,path[step+1].x,tlerp),lerp(path[step].y,path[step+1].y,tlerp)
+
+		add(_enemy.pathx,x)
+		if(#_enemy.pathx>2)deli(_enemy.pathx,1)
+		add(_enemy.pathy,y)
+		if(#_enemy.pathy>2)deli(_enemy.pathy,1)
+
+		_enemy.ox=avg(_enemy.pathx)
+		_enemy.oy=avg(_enemy.pathy)
+
+
+		local dx = _enemy.ox -oldx
+		local dy =  _enemy.oy -oldy
+		_enemy.mx = dx 
+		_enemy.my = dy
 	end
 end
 
@@ -365,10 +448,12 @@ end
 
 -- drawing reorganisation
 function draw_ui()
-	local ox,oy=3+cam_x,3
+	camera()
+
+	local ox,oy=3,3
 
 	local score_str = score==0 and "0" or tostr(score,0x2).."0"
-	print(score_str, ox, oy, 7)
+	--print(score_str, ox, oy, 11)
 
 	-- lives UI
 	ox+=128
@@ -379,7 +464,23 @@ function draw_ui()
 			if(live_flash==0)live_preview_offset=0
 			if(global_flash)goto skip_lives
 		end
-		sspr_obj(21,ox-9*i,122)
+		--sspr_obj(21,ox-9*i,122)
 	end
 	::skip_lives::
+
+
+	local x=8
+	local y1,y2 = 20,110
+
+	line(x-1,y1,x+1,y1,8)
+	line(x-1,y2,x+1,y2,8)
+	line(x,y1,x,y2,8)
+
+	palt(14,true)
+	sspr(98,117,5,11,x-2,y1-12)
+	sspr(104,120,7,8,x-3,y2+2)
+
+	sspr(92,120,5,8,x-2,80 - t*0.02)
+
+	allpal()
 end

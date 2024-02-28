@@ -4,5 +4,5 @@
 	split via newline for readability
 ]]
 
-enemy_data=[[100,10,2,5
+enemy_data=[[100,25,2,5
 100,20,2,5]]

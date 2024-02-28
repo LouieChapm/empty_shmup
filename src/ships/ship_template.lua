@@ -32,7 +32,9 @@
 function init_player()
 	ship_type = 1
 
-	save("speed,psp,pr8,plm,player_x,player_y","2.1,6,3,30,64,64")
+	save("speed,psp,pr8,plm,player_x,player_y","1.8,6,3,30,64,64")
+
+	bnk,bnkspd = 0,0.2
 
 	b_sprite_colour = parse_data"10,11,12,3|0,1,2,3|0,8,9,15|14,4,5,6"	-- changed depending on player
 	
@@ -55,7 +57,25 @@ function update_player()
 	end
 	player_movement(lr,ud)
 
-	bnk = mid(-2,mid(bnk-bnkspd,0.5,bnk+bnkspd)+lr*bnkspd*2.5,2.95)
+	bnk_offset=tonum(bnk<-1)*-1+tonum(bnk>1)
+	bnk = mid(-2,mid(bnk-bnkspd,0.5,bnk+bnkspd)+lr*bnkspd*2.5,2.98)
+
+	
+	for i=-1,1,2 do
+		local x_position=player_x-i
+
+		if(bnk_offset>0 and i<0)x_position-=3
+		if(bnk_offset<0 and i>0)x_position+=3
+
+		if t%2==0 then 
+			new_dust(x_position+4,player_y+3)
+			new_dust(x_position-3,player_y+3)
+		end
+
+		if rnd"1"<.1 then 
+			new_dust(x_position,player_y,true)
+		end
+	end
 end
 
 function draw_player()
@@ -71,15 +91,38 @@ function draw_player()
 				local x_position=player_x-i
 				if(bnk_offset>0 and i<0)x_position-=3		-- change muzzle positions if the player is shooting
 				if(bnk_offset<0 and i>0)x_position+=3		-- seperate check for each muzzle , bad but this is staying
-				sspr_obj(split"13,14,15,16"[4-pmuz\1],x_position,player_y+2)
+				sspr_obj(split"13,14,15,16"[4-pmuz\1],x_position,player_y-3)
 			end
 		end							
 		-- muzzle flash (unsurprisingly)
 
-		sspr_obj(flr(bnk+3),player_x,player_y)		-- player sprite
+		local rot = flr(bnk)*0.02
+
+		allpal()
+		pal(14, t%16<8 and 0 or 8)
+		pal(15, t%16<4 and 0 or t%16>12 and 0 or 8)
+		palt(12,true)
+		pd_rotate(player_x+1,player_y+1,rot,2,2.7,2.6,false,1)
+		allpal()
+
+		rectfill(player_x,player_y,player_x+1,player_y+1,11)
 	end
 	player_flash=max(0,player_flash-1)
 end
+
+
+function pd_rotate(x,y,rot,mx,my,w,flip,scale)
+	scale=scale or 1
+	w*=scale*4
+	local cs, ss = cos(rot)*.125/scale,sin(rot)*.125/scale
+	local sx, sy = mx+cs*-w, my+ss*-w
+	local hx = flip and -w or w
+	local halfw = -w
+	for py=y-w,y+w do
+	  tline(x-hx, py, x+hx, py, sx-ss*halfw, sy+cs*halfw, cs, ss)
+	  halfw+=1
+	end
+  end
 
 function player_hurt(_source)	
 	new_explosion(player_x,player_y,1)
