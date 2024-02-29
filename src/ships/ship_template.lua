@@ -44,7 +44,11 @@ function init_player()
 
 	psdir_b=split".5,.5"
 
-	player={x=63,y=140,hb=gen_hitbox(1)}
+	player={
+		x=63,
+		y=140,
+		hb=gen_hitbox(1,{split"0,0,2,2"}),
+		car_hb = gen_hitbox(1,{split"-3,-7,8,16"})}
 
 	player_form = 0
 end
@@ -164,7 +168,25 @@ function player_shoot()
 	sfx(62,2)
 end
 
+
+function new_bul(_option, _x, _y,_type,_dir)
+	return add(puls,{x=_x,
+	y=_y,
+	aox=t,
+	type=_type,
+	hb=gen_hitbox(1,{split"-3,-8,8,8"}),
+	dir=_dir,
+	opt=_option})
+end
+
+
 ----------=================  TYPE B FUNCTIONS  =================----------
+
+function sgn( number )
+	if(number>0)return 1
+	if(number<0)return -1
+	return 0
+end
 
 function player_movement(lr,ud)
 	-- if(not player_active)return
@@ -191,6 +213,26 @@ function player_movement(lr,ud)
 	if(inbtn!=last_btn)player_x,player_y=player_x\1,player_y\1
 	last_btn=inbtn
 
+	for enem in all(enems) do
+		if player_carcol(enem) then 
+			local dir = sgn(player_x-enem.x)
+			lr,ud = dir,0 
+			enem.sx -= dir
+			enem.origin_x -= dir
+
+			enem.pushed = true
+			
+			--enem.health -= 2
+
+
+			for i=1,3 do
+				local x,y = player_x+(enem.x-player_x)*0.5 + eqrnd(2),player_y + eqrnd(6)
+				new_spark(x,y,eqrnd(1),3+rnd(5))
+				--spawn_oneshot(-1,1,x,y)
+			end
+		end
+	end
+
 	if input_disabled or player_lerp_perc>=0 then
 		if(disable_timer>0)disable_timer-=1
 		bnk=0
@@ -204,8 +246,4 @@ function player_movement(lr,ud)
 
 	-- delayed x/y
 	delx,dely=lerp(delx,player_x,0.2),lerp(dely,player_y,0.2) -- tokens
-
-	for enem in all(enems) do
-		if(not enem.disabled and enem.t>60 and player_col(enem))player_hurt()
-	end
 end

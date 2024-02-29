@@ -37,22 +37,10 @@ function init_baseshmup(_enemy_data)									-- save spritesheet to upper mem
 	save("t,player_lerpx_1,player_lerpy_1,player_lerpx_2,player_lerpy_2,player_lerp_perc,player_lerp_speed,player_lerp_delay,player_lerp_type,shot_pause,draw_particles_above","0,64,150,63,95,0,2,0,easeout,0,-1")
 	save("score,lives,live_preview_offset,live_flash,pmuz,pause_combo,combo_num,combo_counter,combo_freeze,disable_timer,player_immune,player_flash,ps_held_prev,screen_flash,plast,op_perc","0,2,0,0,0,0,0,0,0,0,0,0,0,0.3,0,1")
 
-	hitboxes = parse_data"0,0,2,2|-3,-4,8,8|-2,-16,8,12"	-- this is the table that includes the hitboxes for enemies
+	hitboxes = parse_data"0,0,2,2|-3,-7,8,16|-2,-16,8,12"	-- this is the table that includes the hitboxes for enemies
 
 	enems,puls,one_shots={},{},{}
 	enemy_data=parse_data(_enemy_data,"\n")
-end
-
-
-
-function new_bul(_option, _x, _y,_type,_dir)
-	return add(puls,{x=_x,
-	y=_y,
-	aox=t,
-	type=_type,
-	hb=gen_hitbox(2),
-	dir=_dir,
-	opt=_option})
 end
 
 
@@ -99,7 +87,7 @@ end
 
 -- any one shot animation
 function spawn_oneshot(_index,_speed,_origin_x,_origin_y)
-	local length=#anim_library[_index]
+	local length=_index > 0 and #anim_library[_index] or 8
 
 	add(one_shots,{index=_index,
 
@@ -116,7 +104,12 @@ end
 
 function drw_oneshots(_oneshot)
 	_oneshot.life-=delta_time
-	sspr_anim(_oneshot.index,_oneshot.x,_oneshot.y,_oneshot.o,_oneshot.speed)
+
+	if _oneshot.index == -1 then 
+		circfill(_oneshot.x, _oneshot.y, min(_oneshot.life,3),_oneshot.life < 6 and 10 or 11)
+	else
+		sspr_anim(_oneshot.index,_oneshot.x,_oneshot.y,_oneshot.o,_oneshot.speed)
+	end
 	if(_oneshot.life<0)del(one_shots,_oneshot)
 end
 
@@ -138,8 +131,12 @@ function check_bulcol(_bullet)
 end
 
 function player_col(item) -- tokens maybe ?
-	if(player_immune>0 or item.inactive)return false
+	if(player_immune>0)return false
 	return col(item,player)
+end
+
+function player_carcol(item)
+	return col(item,{x=player.x,y=player.y,hb=player.car_hb})
 end
 
 -- replaces every colour with a colour
@@ -242,7 +239,6 @@ end
 
 -- draw a single enemy
 function drw_enem(e)
-	if(e.disabled and global_flash)return
 	local flash=e.flash>0 or e.anchor and e.anchor.flash>0
 	if(flash and t%4<2)allpal(7)	
 
@@ -250,6 +246,7 @@ function drw_enem(e)
 	local x2 = e.pathx[#e.pathx]
 
 	local dir = x1-x2 - e.origin_x
+	if(e.pushed)dir=0
 
 	--sspr_obj(e.s,e.sx+e.ox,e.sy+e.oy,e.t)
 	allpal()
@@ -281,6 +278,8 @@ function drw_enem(e)
 
 
 	if(e.flash>-1)allpal()e.flash-=1
+
+	e.pushed = false
 end
 
 function damage_enem(hit, damage_amount, ignore_invuln)

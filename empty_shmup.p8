@@ -51,6 +51,7 @@ function _init()
 	anim=0
 
 	dust_parts={}
+	spark_parts={}
 end
 
 function _update60()
@@ -65,7 +66,6 @@ function _update60()
 	upd_bulfuncs()										-- handles the spawning of patterns , and also updates projectiles
 
 	foreach(enems,upd_enem)								-- update enemies
-	debug = #enems
 
 
 	update_player()										-- generic player update
@@ -105,6 +105,7 @@ function _draw()
 	draw_player()
 	
 	foreach(one_shots,drw_oneshots)
+	foreach(spark_parts,drw_spark)
 
 	drw_buls()
 
@@ -253,6 +254,39 @@ function spiral_anim(_perc)
 		rectfill(x-1,y,x+15,y+17,13)
 	end
 	fillp""
+end
+
+function new_spark( _x,_y, _dx,_dy )
+	local spark = {
+		x = _x,
+		y = _y,
+
+		dx = _dx,
+		dy = _dy,
+
+		age = - rnd(5)
+	}
+
+	add(spark_parts,spark)
+end
+
+function drw_spark( spark )
+	spark.age += 1
+
+	local x1,y1 = spark.x,spark.y 
+
+	spark.x += spark.dx
+	spark.y += spark.dy + map_bg_speed * 0.05
+
+	spark.dx *= 0.9
+	spark.dy *= 0.9
+
+	local x2,y2 = spark.x,spark.y 
+
+	local age = spark.age
+	line(x1,y1,x2,y2,age<2 and 10 or age>10 and 8 or age > 4 and 10 or 11)
+
+	if(age > 20 )del(spark_parts,spark)
 end
 
 function new_dust( _x,_y, is_cloud)
