@@ -48,7 +48,10 @@ function init_player()
 		x=63,
 		y=140,
 		hb=gen_hitbox(1,{split"0,0,2,2"}),
-		car_hb = gen_hitbox(1,{split"-3,-7,8,16"})}
+		car_hb = gen_hitbox(1,{split"-3,-7,8,16"})
+	}
+	pdelta_x = 0
+	pdelta_y = 0
 
 	player_form = 0
 end
@@ -215,13 +218,20 @@ function player_movement(lr,ud)
 
 	for enem in all(enems) do
 		if player_carcol(enem) then 
-			local dir = sgn(player_x-enem.x)
-			lr,ud = dir,0 
-			enem.sx -= dir
-			enem.origin_x -= dir
+			--local dir = sgn(player_x-enem.x)
+			--lr,ud = dir,0 
 
-			enem.pushed = true
-			
+			local dir = get_dir(player_x,player_y,enem.x,enem.y)
+			local dx,dy = cos(dir),sin(dir)
+
+			enem.delta_x = dx * 6
+			enem.delta_y = dy * 2
+
+			pdelta_x = -dx * 4
+			pdelta_y = -dy * 2
+
+
+						
 			--enem.health -= 2
 
 
@@ -233,13 +243,20 @@ function player_movement(lr,ud)
 		end
 	end
 
+
+	pdelta_x *= 0.85
+	pdelta_y *= 0.85
+
+	local input = lr
+
+
 	if input_disabled or player_lerp_perc>=0 then
 		if(disable_timer>0)disable_timer-=1
 		bnk=0
 	else
 		--normalized movement
 		local nrm=lr!=0 and ud!=0 and 0.717 or 1
-		player_x,player_y=mid(-16,player_x+lr*nrm*mspeed,142),mid(2,player_y+ud*nrm*mspeed,124)
+		player_x,player_y=mid(-16,player_x+input*nrm*mspeed + pdelta_x,142),mid(2,player_y+ud*nrm*mspeed+pdelta_y,124)
 		-- add data back to table for niceties
 		player.x,player.y=player_x,player_y
 	end

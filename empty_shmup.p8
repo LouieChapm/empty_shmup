@@ -66,7 +66,9 @@ function _update60()
 	upd_bulfuncs()										-- handles the spawning of patterns , and also updates projectiles
 
 	foreach(enems,upd_enem)								-- update enemies
-
+	for enem in all(enems) do 
+		enem.pushed = false
+	end
 
 	update_player()										-- generic player update
 	if(not input_disabled and not game_freeze)player_shoot()				-- player shooting
@@ -93,6 +95,7 @@ function _draw()
 	
 	foreach(dust_parts,drw_dust)
 	fillp()
+	dust_above = false
 	drw_dust_clouds()
 	fillp()
 
@@ -328,7 +331,7 @@ function drw_dust_clouds()
 		if dust.is_cloud then 
 			dust.age += 1
 			dust.x += dust.dx
-			dust.y += dust.dy + map_bg_speed * .5
+			dust.y += dust.dy + map_bg_speed * .3
 
 			dust.dx *=0.9
 			dust.dy *=0.5

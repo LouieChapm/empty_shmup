@@ -205,7 +205,14 @@ function spawn_enem(_path, _type, _spawn_x, _spawn_y, _ox, _oy)
 	hb,active,type,sx,sy,ox,oy,x,y,t,shot_index,perc,flash,path_index,pathx,pathy,patterns,lerpperc,intropause=gen_hitbox(hb),true,_type,_spawn_x,_spawn_y,_ox or 0, _oy or 0,63,-18,0,1,0,0,_path,{},{},{},-1,0
 
 	origin_x = _spawn_x
-	mx,my = 0,0
+	origin_y = _spawn_y
+--	mx,my = 0,0
+
+	delta_x,delta_y = 0,0
+
+	prevx,prevy ={},{}
+
+
 
 	if(_path)depth,path=gen_path(crumb_lib[_path])
 
@@ -213,7 +220,10 @@ function spawn_enem(_path, _type, _spawn_x, _spawn_y, _ox, _oy)
 end
 
 -- update each enemy
-function upd_enem(_enemy)		
+function upd_enem(_enemy)	
+	_enemy.old_x = _enemy.x 
+	_enemy.old_y = _enemy.y
+	
 	if _enemy.health<=0 then
 		enem_sub_health(_enemy)
 		return
@@ -224,7 +234,21 @@ function upd_enem(_enemy)
 	if(_enemy.lerpperc>=0)upd_lerp(_enemy)
 	if(_enemy.path)follow_path(_enemy)
 
+	enem_check_col(_enemy)
+
+	_enemy.sx += _enemy.delta_x
+	_enemy.origin_x += _enemy.delta_x
+
+	_enemy.sy += _enemy.delta_y
+	--_enemy.origin_y += _enemy.delta_y
+
+	_enemy.delta_x *= 0.9
+	_enemy.delta_y *= 0.9
+	
+
 	_enemy.x,_enemy.y=_enemy.ox+_enemy.sx,_enemy.oy+_enemy.sy
+
+
 
 	-- controls the hit-flash
 	_enemy.flash-=1 
@@ -232,9 +256,54 @@ function upd_enem(_enemy)
 	if(_enemy.path and player_lerp_delay<=0)enem_path_shoot(_enemy)
 end
 
+function enem_check_col(enem)
+	if(enem.pushed)return
+	for car in all(enems) do
+		if car~=enem and not car.pushed and col(enem,car) then 
+			--local dir = sgn(player_x-enem.x)
+			--lr,ud = dir,0 
+
+			local dir = get_dir(enem.x,enem.y,car.x,car.y)
+			local dx,dy = cos(dir),sin(dir)
+
+
+			local dirx = car.hb.w * sgn(enem.x - car.x) * 0.5
+			local dirx2 = enem.hb.w * sgn(car.x - enem.x) * 0.5
+			enem.sx += dirx
+			car.sx += dirx2
+
+			local enem1dir = (enem.x - dirx)-enem.old_x
+			local car1dir = (car.x - dirx2)-car.old_x
+
+			local enem1diry = enem.y-enem.old_y
+			local car1diry = car.y-car.old_y
+
+			local max_vel = 3
+			local friction = 0.3
+			enem.delta_x,car.delta_x = mid(-max_vel,car1dir * friction,max_vel), mid(-max_vel,enem1dir * friction + dx,max_vel)
+			enem.delta_y,car.delta_y = mid(-max_vel,car1diry * friction,max_vel), mid(-max_vel,enem1diry * friction,max_vel)
+
+
+			enem.pushed = true 
+			car.pushed = true
+
+
+			for i=1,3 do
+				local x,y = enem.x+(car.x-enem.x)*0.5 + eqrnd(2),enem.y + eqrnd(6)
+				new_spark(x,y,eqrnd(1),3+rnd(5))
+				--spawn_oneshot(-1,1,x,y)
+			end
+		end
+	end
+end
+
 --direction for data
 function get_dir(x1,y1,x2,y2)
 	return atan2(x2-x1,y2-y1)
+end
+
+function get_edelta(e)
+	return e.x-e.old_x
 end
 
 -- draw a single enemy
@@ -245,18 +314,18 @@ function drw_enem(e)
 	local x1 = e.x
 	local x2 = e.pathx[#e.pathx]
 
-	local dir = x1-x2 - e.origin_x
-	if(e.pushed)dir=0
+	local dir = flr(mid(-2,mid(-1,get_edelta(e),1)*2,2.98))
+	
 
 	--sspr_obj(e.s,e.sx+e.ox,e.sy+e.oy,e.t)
 	allpal()
 	pal(14, t%16<8 and 0 or 8)
 	pal(15, t%16<4 and 0 or t%16>12 and 0 or 8)
 	palt(12,true)
-	pd_rotate(e.x+1,e.y+1,dir*-0.1,6,2.7,2.6,false,1)
+	pd_rotate(e.x+1,e.y+1,dir*.03,6,2.7,2.6,false,1)
 	allpal()
 
-	local dx,dy = e.mx,e.my
+	local dx,dy = e.pathdirx,e.pathdiry
 	line(e.x,e.y,e.x + dx*10, e.y + dy*10, 11)
 
 	for i=-1,1,2 do
@@ -276,10 +345,12 @@ function drw_enem(e)
 		end
 	end
 
+	--print(dir,e.x,e.y,t)
+	--print(e.x .."\n"..e.sx , e.x,e.y,11)
+
+
 
 	if(e.flash>-1)allpal()e.flash-=1
-
-	e.pushed = false
 end
 
 function damage_enem(hit, damage_amount, ignore_invuln)
@@ -356,8 +427,8 @@ function follow_path(_enemy)
 
 	-- reached the end of its path
 	if _enemy.perc>#path-2 then
-		_enemy.ox += _enemy.mx
-		_enemy.oy += _enemy.my
+		_enemy.ox += _enemy.pathdirx
+		_enemy.oy += _enemy.pathdiry
 
 		local lower_bound, upper_bound = -20,140
 
@@ -386,8 +457,8 @@ function follow_path(_enemy)
 
 		local dx = _enemy.ox -oldx
 		local dy =  _enemy.oy -oldy
-		_enemy.mx = dx 
-		_enemy.my = dy
+		_enemy.pathdirx = dx 
+		_enemy.pathdiry = dy
 	end
 end
 
